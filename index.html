@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Akaun Perniagaan — Cukai Pendapatan</title>
+<style>
+  :root{
+    --bg:#f4f4f0; --card:#ffffff; --ink:#1c1c1a; --muted:#6b6b66; --line:#e2e2db;
+    --green:#1d9e75; --red:#d85a30; --blue:#185fa5; --accent:#0f6e56;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif; background:var(--bg); color:var(--ink); line-height:1.5;}
+  .wrap{max-width:840px; margin:0 auto; padding:20px 16px 60px;}
+  header h1{font-size:22px; margin:0 0 2px; font-weight:600;}
+  header p{margin:0; color:var(--muted); font-size:14px;}
+  .setup{background:#fff8e6; border:1px solid #f0d68a; border-radius:10px; padding:14px 16px; margin:16px 0; font-size:13px;}
+  .setup input{width:100%; margin-top:8px;}
+  .topbar{display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin:16px 0;}
+  .topbar label{font-size:13px; color:var(--muted);}
+  input,select,button{font-family:inherit; font-size:14px; padding:9px 11px; border:1px solid var(--line); border-radius:8px; background:#fff; color:var(--ink);}
+  button{cursor:pointer; background:#fff; transition:background .15s;}
+  button:hover{background:#f1f1ec;}
+  button.primary{background:var(--accent); color:#fff; border-color:var(--accent); font-weight:500;}
+  button.primary:hover{background:#0c5a47;}
+  .tabs{display:flex; gap:8px; flex-wrap:wrap; margin:18px 0;}
+  .tabs button{flex:1; min-width:90px;}
+  .tabs button.active{background:var(--ink); color:#fff; border-color:var(--ink);}
+  .cards{display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:12px; margin-bottom:20px;}
+  .stat{background:var(--card); border:1px solid var(--line); border-radius:10px; padding:16px;}
+  .stat .lbl{font-size:13px; color:var(--muted); margin-bottom:6px;}
+  .stat .val{font-size:22px; font-weight:600;}
+  .panel{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:18px 20px; margin-bottom:18px;}
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;}
+  .field label{display:block; font-size:12px; color:var(--muted); margin-bottom:4px;}
+  .field input,.field select{width:100%;}
+  table{width:100%; border-collapse:collapse; font-size:13px;}
+  th{text-align:left; color:var(--muted); font-weight:500; padding:8px 6px; border-bottom:1px solid var(--line);}
+  td{padding:9px 6px; border-bottom:1px solid var(--line);}
+  .right{text-align:right;}
+  .pos{color:var(--green);} .neg{color:var(--red);} .bl{color:var(--blue);}
+  .del{border:none; background:none; color:var(--red); cursor:pointer; padding:2px 6px; font-size:13px;}
+  .edit-btn{border:none; background:none; color:var(--blue); cursor:pointer; padding:2px 6px; font-size:13px;}
+  .empty{color:var(--muted); font-size:13px; padding:12px 0;}
+  .hide{display:none;}
+  .status{font-size:12px; color:var(--muted); margin-left:auto;}
+  .reportbox h2{margin:0 0 2px; font-size:18px;}
+  .reportbox .sub{color:var(--muted); font-size:14px; margin:0;}
+  .reportbox .yr{color:var(--muted); font-size:13px; margin:0 0 16px;}
+  .total-row td{font-weight:600; border-top:2px solid var(--ink); border-bottom:none; padding-top:12px;}
+  .note{font-size:11px; color:var(--muted); margin-top:16px;}
+  .cat-list{display:flex; flex-wrap:wrap; gap:6px; margin:8px 0;}
+  .cat-tag{background:#eef; border-radius:20px; padding:4px 10px; font-size:13px; display:flex; align-items:center; gap:4px;}
+  .cat-tag button{border:none; background:transparent; color:var(--red); cursor:pointer; font-size:14px; padding:0; line-height:1;}
+  @media print{ body{background:#fff;} .noprint{display:none!important;} .panel{border:none; padding:0;} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Akaun Perniagaan</h1>
+    <p>Rekod pendapatan & perbelanjaan untuk cukai pendapatan</p>
+  </header>
+
+  <div class="setup noprint" id="setupBox">
+    <strong>Tetapan sekali sahaja:</strong> Tampal "Web app URL" daripada Google Apps Script anda di bawah, kemudian klik Sambung.
+    <input id="apiUrl" type="text" placeholder="https://script.google.com/macros/s/..../exec">
+    <div style="margin-top:8px; display:flex; gap:8px;">
+      <button class="primary" onclick="connect()">Sambung</button>
+      <span class="status" id="connStatus"></span>
+    </div>
+  </div>
+
+  <div id="app" class="hide">
+    <div class="topbar noprint">
+      <label>Tahun taksiran</label>
+      <select id="yearFilter" onchange="render()">
+        <option value="2026">2026</option>
+        <option value="2025">2025</option>
+        <option value="2024">2024</option>
+      </select>
+      <span class="status" id="syncStatus"></span>
+    </div>
+
+    <div class="tabs noprint">
+      <button id="t-dash" class="active" onclick="tab('dash')">Ringkasan</button>
+      <button id="t-income" onclick="tab('income')">Pendapatan</button>
+      <button id="t-expense" onclick="tab('expense')">Perbelanjaan</button>
+      <button id="t-recurring" onclick="tab('recurring')">Berulang</button>
+      <button id="t-report" onclick="tab('report')">Laporan</button>
+      <button id="t-settings" onclick="tab('settings')">Tetapan Syarikat</button>
+    </div>
+
+    <div id="v-dash"></div>
+    <div id="v-income" class="hide"></div>
+    <div id="v-expense" class="hide"></div>
+    <div id="v-recurring" class="hide"></div>
+    <div id="v-report" class="hide"></div>
+    <div id="v-settings" class="hide"></div>
+  </div>
+</div>
+
+<script>
+// ---------- STATE ----------
+let API = localStorage.getItem('acc-api') || '';
+let META = { coName:'', coReg:'', coAddr:'', coPhone:'', coEmail:'', coLogo:'', expenseCategories:null, deletedRecurringIds:[] };
+let DATA = { income: [], expense: [], recurring: [] };
+let editingId = null;   // for income/expense edit mode
+
+// Default categories
+const DEFAULT_EXPENSE_CATS = ["Sewa premis","Gaji & upah","Utiliti (air/elektrik/internet)","Stok / bahan mentah","Pengangkutan & minyak","Pemasaran & iklan","Alat tulis & pejabat","Penyelenggaraan & pembaikan","Yuran profesional","Insurans","Telefon & komunikasi","Lain-lain"];
+
+function getExpenseCats(){ return META.expenseCategories || DEFAULT_EXPENSE_CATS; }
+
+// ---------- HELPERS ----------
+function fmt(n){ return 'RM ' + (Math.round(n*100)/100).toLocaleString('en-MY',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function yr(){ return document.getElementById('yearFilter').value; }
+function inYear(d){ return String(d||'').slice(0,4) === yr(); }
+function setSync(msg){ document.getElementById('syncStatus').textContent = msg; }
+
+// ---------- API ----------
+async function apiGet(){
+  const r = await fetch(API);
+  return await r.json();
+}
+async function apiPost(body){
+  const r = await fetch(API, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify(body) });
+  return await r.json();
+}
+
+// ---------- CONNECT & LOAD ----------
+async function connect(){
+  const url = document.getElementById('apiUrl').value.trim();
+  if(!url){ document.getElementById('connStatus').textContent = 'Sila tampal URL.'; return; }
+  API = url;
+  document.getElementById('connStatus').textContent = 'Menyambung...';
+  try{
+    const d = await apiGet();
+    if(d.error) throw new Error(d.error);
+    DATA = { income: d.income||[], expense: d.expense||[], recurring: d.recurring||[] };
+    if(d.settings){
+      META = Object.assign(META, d.settings);
+      if(!META.expenseCategories) META.expenseCategories = null;
+      if(!META.deletedRecurringIds) META.deletedRecurringIds = [];
+    }
+    localStorage.setItem('acc-api', API);
+    document.getElementById('setupBox').classList.add('hide');
+    document.getElementById('app').classList.remove('hide');
+    // Generate recurring records after loading
+    await generateRecurringRecords();
+    render();
+  }catch(err){
+    document.getElementById('connStatus').textContent = 'Gagal: ' + err.message + ' — semak URL & tetapan deployment.';
+  }
+}
+
+// ---------- RECURRING LOGIC ----------
+function getRecurrenceDates(template, upToDate){
+  // Returns array of date strings (YYYY-MM-DD) from startDate up to upToDate inclusive
+  const dates = [];
+  if(!template.startDate) return dates;
+  let current = new Date(template.startDate + 'T00:00:00');
+  const end = new Date(upToDate + 'T00:00:00');
+  while(current <= end){
+    dates.push(current.toISOString().slice(0,10));
+    if(template.frequency === 'monthly'){
+      current.setMonth(current.getMonth() + 1);
+    } else if(template.frequency === 'yearly'){
+      current.setFullYear(current.getFullYear() + 1);
+    } else if(template.frequency === 'weekly'){
+      current.setDate(current.getDate() + 7);
+    } else break;
+  }
+  return dates;
+}
+
+async function generateRecurringRecords(){
+  if(!DATA.recurring || DATA.recurring.length===0) return;
+  const today = new Date().toISOString().slice(0,10);
+  const deletedSet = new Set(META.deletedRecurringIds || []);
+  let newRecords = false;
+  for(const tpl of DATA.recurring){
+    const occDates = getRecurrenceDates(tpl, today);
+    for(const dateStr of occDates){
+      const genId = `rec_${tpl.id}_${dateStr}`;
+      if(deletedSet.has(genId)) continue;
+      const targetArr = tpl.type === 'income' ? DATA.income : DATA.expense;
+      const exists = targetArr.some(r => r.id === genId);
+      if(!exists){
+        const rec = {
+          id: genId,
+          date: dateStr,
+          desc: tpl.desc,
+          amt: tpl.amt,
+          cat: tpl.cat || '',
+          recurringTemplateId: tpl.id
+        };
+        targetArr.push(rec);
+        try{ await apiPost({action:'add', type:tpl.type, record:rec}); }catch(e){}
+        newRecords = true;
+      }
+    }
+  }
+  if(newRecords){
+    // Re-sort by date (newest first) after generating
+    DATA.income.sort((a,b)=>String(b.date).localeCompare(String(a.date)));
+    DATA.expense.sort((a,b)=>String(b.date).localeCompare(String(a.date)));
+  }
+}
+
+// ---------- ACTIONS (CRUD) ----------
+function val(id){ return document.getElementById(id).value; }
+
+async function saveSettings(){
+  META.coName  = val('s-name');
+  META.coReg   = val('s-reg');
+  META.coAddr  = val('s-addr');
+  META.coPhone = val('s-phone');
+  META.coEmail = val('s-email');
+  setSync('Menyimpan tetapan...');
+  try{
+    await apiPost({action:'saveSettings', settings:META});
+    setSync('Tetapan disimpan ✓');
+    render();
+  }catch(e){ setSync('Ralat menyimpan tetapan'); }
+}
+
+function handleLogo(input){
+  const file = input.files[0];
+  if(!file) return;
+  if(file.size > 1500000){ alert('Saiz logo terlalu besar. Sila guna imej bawah 1.5 MB.'); return; }
+  const reader = new FileReader();
+  reader.onload = function(e){
+    const img = new Image();
+    img.onload = function(){
+      const max = 300;
+      const scale = Math.min(1, max / img.width);
+      const c = document.createElement('canvas');
+      c.width = img.width * scale; c.height = img.height * scale;
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      META.coLogo = c.toDataURL('image/png');
+      document.getElementById('logoPreview').src = META.coLogo;
+      document.getElementById('logoPreview').style.display = 'block';
+      saveSettings();
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeLogo(){
+  META.coLogo = '';
+  document.getElementById('logoPreview').style.display = 'none';
+  saveSettings();
+}
+
+// Income & Expense (add / update)
+async function saveIncomeExpense(type){
+  const date = val(type==='income'?'i-date':'e-date');
+  const desc = val(type==='income'?'i-desc':'e-desc').trim();
+  const amt = parseFloat(val(type==='income'?'i-amt':'e-amt'));
+  const cat = type==='expense' ? val('e-cat') : '';
+  if(!date||!desc||isNaN(amt)){ alert('Sila isi tarikh, keterangan dan jumlah.'); return; }
+  if(editingId){
+    // Update existing record
+    const arr = DATA[type];
+    const idx = arr.findIndex(r => String(r.id) === String(editingId));
+    if(idx===-1){ alert('Rekod tidak dijumpai.'); return; }
+    arr[idx].date = date;
+    arr[idx].desc = desc;
+    arr[idx].amt = amt;
+    if(type==='expense') arr[idx].cat = cat;
+    setSync('Mengemaskini...');
+    try{ await apiPost({action:'update', type, record: arr[idx]}); setSync('Rekod dikemaskini ✓'); }
+    catch(e){ setSync('Ralat mengemaskini'); }
+    editingId = null;
+  }else{
+    // Add new
+    const rec = { id: Date.now(), date, desc, amt, cat };
+    setSync('Menyimpan...');
+    DATA[type].push(rec);
+    try{ await apiPost({action:'add', type, record:rec}); setSync('Disimpan ke Google Sheet ✓'); }
+    catch(e){ setSync('Ralat menyimpan'); }
+  }
+  DATA.income.sort((a,b)=>String(b.date).localeCompare(String(a.date)));
+  DATA.expense.sort((a,b)=>String(b.date).localeCompare(String(a.date)));
+  render();
+}
+
+async function del(type, id){
+  if(!confirm('Padam rekod ini?')) return;
+  setSync('Memadam...');
+  DATA[type] = DATA[type].filter(x => String(x.id) !== String(id));
+  try{ await apiPost({action:'delete', type, id}); setSync('Dipadam ✓'); }
+  catch(e){ setSync('Ralat memadam'); }
+  // If it was a generated recurring record, add to deleted list so it won't regenerate
+  if(id.startsWith('rec_') && (type==='income'||type==='expense')){
+    META.deletedRecurringIds.push(id);
+    await apiPost({action:'saveSettings', settings:META}).catch(()=>{});
+  }
+  render();
+}
+
+function editRecord(type, id){
+  const arr = DATA[type];
+  const rec = arr.find(r => String(r.id) === String(id));
+  if(!rec) return;
+  editingId = id;
+  if(type==='income'){
+    document.getElementById('i-date').value = rec.date;
+    document.getElementById('i-desc').value = rec.desc;
+    document.getElementById('i-amt').value = rec.amt;
+    document.querySelector('#v-income .primary').textContent = 'Kemaskini pendapatan';
+  }else{
+    document.getElementById('e-date').value = rec.date;
+    document.getElementById('e-cat').value = rec.cat || getExpenseCats()[0];
+    document.getElementById('e-desc').value = rec.desc;
+    document.getElementById('e-amt').value = rec.amt;
+    document.querySelector('#v-expense .primary').textContent = 'Kemaskini perbelanjaan';
+  }
+  // Scroll to top
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+// Recurring templates
+async function saveRecurring(){
+  const id = val('r-id') || Date.now().toString();
+  const type = val('r-type');
+  const desc = val('r-desc').trim();
+  const amt = parseFloat(val('r-amt'));
+  const startDate = val('r-start');
+  const freq = val('r-freq');
+  const cat = type==='expense' ? val('r-cat') : '';
+  if(!desc||isNaN(amt)||!startDate||!freq){ alert('Sila isi semua medan wajib.'); return; }
+  const tpl = { id, type, desc, amt, startDate, frequency:freq, cat };
+  const existingIdx = DATA.recurring.findIndex(r => r.id === id);
+  if(existingIdx > -1){
+    DATA.recurring[existingIdx] = tpl;
+    setSync('Mengemaskini templat...');
+    try{ await apiPost({action:'updateRecurring', template:tpl}); setSync('Templat dikemaskini ✓'); }
+    catch(e){ setSync('Ralat mengemaskini templat'); }
+  }else{
+    DATA.recurring.push(tpl);
+    setSync('Menambah templat...');
+    try{ await apiPost({action:'addRecurring', template:tpl}); setSync('Templat disimpan ✓'); }
+    catch(e){ setSync('Ralat menyimpan templat'); }
+  }
+  // Clear form
+  document.getElementById('r-id').value = '';
+  document.getElementById('r-type').value = 'expense';
+  document.getElementById('r-desc').value = '';
+  document.getElementById('r-amt').value = '';
+  document.getElementById('r-start').value = '';
+  document.getElementById('r-freq').value = 'monthly';
+  document.getElementById('r-cat').value = getExpenseCats()[0];
+  document.querySelector('#v-recurring .primary').textContent = 'Simpan Templat';
+  // Regenerate records
+  await generateRecurringRecords();
+  render();
+}
+
+function editRecurring(id){
+  const tpl = DATA.recurring.find(r => r.id === id);
+  if(!tpl) return;
+  document.getElementById('r-id').value = tpl.id;
+  document.getElementById('r-type').value = tpl.type;
+  document.getElementById('r-desc').value = tpl.desc;
+  document.getElementById('r-amt').value = tpl.amt;
+  document.getElementById('r-start').value = tpl.startDate;
+  document.getElementById('r-freq').value = tpl.frequency;
+  if(tpl.type==='expense') document.getElementById('r-cat').value = tpl.cat || getExpenseCats()[0];
+  document.querySelector('#v-recurring .primary').textContent = 'Kemaskini Templat';
+}
+
+async function deleteRecurring(id){
+  if(!confirm('Padam templat ini? (Rekod yang telah dijana tidak akan dipadam)')) return;
+  setSync('Memadam templat...');
+  DATA.recurring = DATA.recurring.filter(r => r.id !== id);
+  try{ await apiPost({action:'deleteRecurring', id}); setSync('Templat dipadam ✓'); }
+  catch(e){ setSync('Ralat memadam templat'); }
+  render();
+}
+
+// ---------- CATEGORY MANAGEMENT ----------
+function addCategory(){
+  const newCat = val('new-cat').trim();
+  if(!newCat) return;
+  let cats = [...getExpenseCats()];
+  if(cats.includes(newCat)){ alert('Kategori sudah wujud.'); return; }
+  cats.push(newCat);
+  META.expenseCategories = cats;
+  saveSettings(); // will trigger render after save
+}
+
+function deleteCategory(cat){
+  let cats = getExpenseCats().filter(c => c !== cat);
+  META.expenseCategories = cats.length ? cats : null; // null to fallback to default
+  saveSettings();
+}
+
+// ---------- TAB SWITCHING ----------
+function tab(t){
+  ['dash','income','expense','recurring','report','settings'].forEach(x=>{
+    document.getElementById('v-'+x).classList.toggle('hide', x!==t);
+    document.getElementById('t-'+x).classList.toggle('active', x===t);
+  });
+  if(t==='income'||t==='expense'){
+    editingId = null;
+    const btn = document.querySelector('#v-'+t+' .primary');
+    if(btn) btn.textContent = t==='income'?'+ Tambah pendapatan':'+ Tambah perbelanjaan';
+  }
+  render(); // ensure fresh data when switching tabs
+}
+
+// ---------- RENDERING ----------
+function totals(){
+  const inc = DATA.income.filter(x=>inYear(x.date)).reduce((s,x)=>s+Number(x.amt||0),0);
+  const exp = DATA.expense.filter(x=>inYear(x.date)).reduce((s,x)=>s+Number(x.amt||0),0);
+  return {inc, exp, net: inc-exp};
+}
+
+function render(){
+  const t = totals();
+  document.getElementById('v-dash').innerHTML = `
+    <div class="cards">
+      <div class="stat"><div class="lbl">Jumlah pendapatan</div><div class="val pos">${fmt(t.inc)}</div></div>
+      <div class="stat"><div class="lbl">Jumlah perbelanjaan</div><div class="val neg">${fmt(t.exp)}</div></div>
+      <div class="stat"><div class="lbl">Untung bersih (boleh cukai)</div><div class="val ${t.net>=0?'bl':'neg'}">${fmt(t.net)}</div></div>
+    </div>
+    <p class="empty">Untung bersih ialah anggaran pendapatan perniagaan boleh cukai sebelum potongan peribadi & rebat, untuk tahun taksiran ${yr()}.</p>`;
+
+  // ----- INCOME -----
+  const ir = DATA.income.filter(x=>inYear(x.date)).sort((a,b)=>String(b.date).localeCompare(String(a.date)));
+  document.getElementById('v-income').innerHTML = `
+    <div class="panel noprint">
+      <div class="grid2">
+        <div class="field"><label>Tarikh</label><input id="i-date" type="date"></div>
+        <div class="field"><label>Jumlah (RM)</label><input id="i-amt" type="number" step="0.01" placeholder="0.00"></div>
+      </div>
+      <div class="field"><label>Keterangan</label><input id="i-desc" type="text" placeholder="cth: Jualan invois #001"></div>
+      <button class="primary" style="margin-top:12px; width:100%;" onclick="saveIncomeExpense('income')">+ Tambah pendapatan</button>
+    </div>
+    ${ir.length?`<table><thead><tr><th>Tarikh</th><th>Keterangan</th><th class="right">Jumlah</th><th></th></tr></thead><tbody>
+      ${ir.map(x=>`<tr><td>${x.date}</td><td>${x.desc}</td><td class="right pos">${fmt(Number(x.amt))}</td>
+        <td class="right" style="white-space:nowrap;"><button class="edit-btn" onclick="editRecord('income','${x.id}')">Edit</button> <button class="del" onclick="del('income','${x.id}')">Padam</button></td></tr>`).join('')}
+      </tbody></table>`:`<p class="empty">Belum ada rekod pendapatan untuk ${yr()}.</p>`}`;
+
+  // ----- EXPENSE -----
+  const er = DATA.expense.filter(x=>inYear(x.date)).sort((a,b)=>String(b.date).localeCompare(String(a.date)));
+  const catList = getExpenseCats();
+  document.getElementById('v-expense').innerHTML = `
+    <div class="panel noprint">
+      <div class="grid2">
+        <div class="field"><label>Tarikh</label><input id="e-date" type="date"></div>
+        <div class="field"><label>Jumlah (RM)</label><input id="e-amt" type="number" step="0.01" placeholder="0.00"></div>
+      </div>
+      <div class="field"><label>Kategori</label><select id="e-cat">${catList.map(c=>`<option>${c}</option>`).join('')}</select></div>
+      <div class="field" style="margin-top:12px;"><label>Keterangan</label><input id="e-desc" type="text" placeholder="cth: Bayaran sewa kedai"></div>
+      <button class="primary" style="margin-top:12px; width:100%;" onclick="saveIncomeExpense('expense')">+ Tambah perbelanjaan</button>
+    </div>
+    ${er.length?`<table><thead><tr><th>Tarikh</th><th>Kategori</th><th>Keterangan</th><th class="right">Jumlah</th><th></th></tr></thead><tbody>
+      ${er.map(x=>`<tr><td>${x.date}</td><td style="font-size:12px;">${x.cat||''}</td><td>${x.desc}</td><td class="right neg">${fmt(Number(x.amt))}</td>
+        <td class="right" style="white-space:nowrap;"><button class="edit-btn" onclick="editRecord('expense','${x.id}')">Edit</button> <button class="del" onclick="del('expense','${x.id}')">Padam</button></td></tr>`).join('')}
+      </tbody></table>`:`<p class="empty">Belum ada rekod perbelanjaan untuk ${yr()}.</p>`}`;
+
+  // ----- RECURRING -----
+  const recTplHtml = DATA.recurring.map(r=>`
+    <tr>
+      <td>${r.desc}</td>
+      <td>${r.type==='income'?'Pendapatan':'Perbelanjaan'}</td>
+      <td>${fmt(r.amt)}</td>
+      <td>${r.frequency==='monthly'?'Bulanan':r.frequency==='yearly'?'Tahunan':'Mingguan'}</td>
+      <td>${r.startDate}</td>
+      <td>${r.cat||''}</td>
+      <td class="right" style="white-space:nowrap;">
+        <button class="edit-btn" onclick="editRecurring('${r.id}')">Edit</button>
+        <button class="del" onclick="deleteRecurring('${r.id}')">Padam</button>
+      </td>
+    </tr>
+  `).join('');
+  document.getElementById('v-recurring').innerHTML = `
+    <div class="panel noprint">
+      <p style="font-weight:600; margin:0 0 12px;">Tambah / Edit Templat Berulang</p>
+      <input type="hidden" id="r-id">
+      <div class="grid2">
+        <div class="field"><label>Jenis</label><select id="r-type" onchange="document.getElementById('r-cat-row').style.display=this.value==='expense'?'':'none'">
+          <option value="expense">Perbelanjaan</option>
+          <option value="income">Pendapatan</option>
+        </select></div>
+        <div class="field"><label>Jumlah (RM)</label><input id="r-amt" type="number" step="0.01" placeholder="0.00"></div>
+      </div>
+      <div class="field" style="margin-bottom:12px;"><label>Keterangan</label><input id="r-desc" type="text" placeholder="cth: Sewa bulanan"></div>
+      <div class="grid2">
+        <div class="field"><label>Mula</label><input id="r-start" type="date"></div>
+        <div class="field"><label>Kekerapan</label><select id="r-freq">
+          <option value="monthly">Bulanan</option>
+          <option value="yearly">Tahunan</option>
+          <option value="weekly">Mingguan</option>
+        </select></div>
+      </div>
+      <div class="field" id="r-cat-row"><label>Kategori</label><select id="r-cat">${catList.map(c=>`<option>${c}</option>`).join('')}</select></div>
+      <button class="primary" style="width:100%; margin-top:12px;" onclick="saveRecurring()">Simpan Templat</button>
+    </div>
+    ${DATA.recurring.length?`<table><thead><tr><th>Penerangan</th><th>Jenis</th><th>Amaun</th><th>Kekerapan</th><th>Mula</th><th>Kategori</th><th></th></tr></thead><tbody>${recTplHtml}</tbody></table>`:'<p class="empty">Belum ada templat berulang.</p>'}
+  `;
+
+  // ----- REPORT -----
+  const ct = {}; catList.forEach(c=>ct[c]=0);
+  DATA.expense.filter(x=>inYear(x.date)).forEach(x=>{ ct[x.cat]=(ct[x.cat]||0)+Number(x.amt||0); });
+  const used = Object.entries(ct).filter(([k,v])=>v>0);
+  const logoHtml = META.coLogo ? `<img src="${META.coLogo}" style="max-height:70px; max-width:200px; object-fit:contain;">` : '';
+  const detailLines = [
+    META.coReg ? 'No. Pendaftaran: ' + META.coReg : '',
+    META.coAddr || '',
+    [META.coPhone?('Tel: '+META.coPhone):'', META.coEmail||''].filter(Boolean).join('  •  ')
+  ].filter(Boolean).map(l=>`<p style="margin:1px 0; font-size:12px; color:var(--muted);">${l}</p>`).join('');
+  document.getElementById('v-report').innerHTML = `
+    <div class="panel reportbox" id="reportArea">
+      <div style="display:flex; align-items:flex-start; gap:16px; border-bottom:2px solid var(--ink); padding-bottom:14px; margin-bottom:18px;">
+        ${logoHtml ? `<div>${logoHtml}</div>` : ''}
+        <div style="flex:1;">
+          <h2 style="margin:0 0 2px; font-size:19px;">${META.coName||'(Nama syarikat belum diisi)'}</h2>
+          ${detailLines}
+        </div>
+      </div>
+      <p style="font-weight:600; font-size:16px; margin:0 0 2px;">Penyata Untung Rugi</p>
+      <p class="yr">Tahun taksiran ${yr()}</p>
+      <p style="font-weight:600; margin:0 0 6px;">Pendapatan</p>
+      <table style="margin-bottom:18px;"><tr><td>Jumlah pendapatan perniagaan</td><td class="right">${fmt(t.inc)}</td></tr></table>
+      <p style="font-weight:600; margin:0 0 6px;">Perbelanjaan mengikut kategori</p>
+      <table style="margin-bottom:18px;">
+        ${used.length?used.map(([k,v])=>`<tr><td>${k}</td><td class="right">${fmt(v)}</td></tr>`).join(''):'<tr><td class="empty">Tiada perbelanjaan direkodkan</td><td></td></tr>'}
+        <tr style="font-weight:600;"><td style="border-top:1px solid var(--line); padding-top:10px;">Jumlah perbelanjaan</td><td class="right" style="border-top:1px solid var(--line); padding-top:10px;">${fmt(t.exp)}</td></tr>
+      </table>
+      <table><tr class="total-row"><td>Untung bersih boleh cukai</td><td class="right ${t.net>=0?'bl':'neg'}">${fmt(t.net)}</td></tr></table>
+      <p class="note">Penyata ini adalah ringkasan rekod sahaja dan bukan nasihat percukaian. Sila rujuk LHDN atau perunding cukai bertauliah untuk pengisytiharan rasmi (Borang B/BE/P).</p>
+    </div>
+    <button class="primary noprint" style="width:100%; margin-top:12px;" onclick="window.print()">Cetak / Simpan PDF</button>`;
+
+  // ----- SETTINGS -----
+  const catHtml = catList.map(c=>`<span class="cat-tag">${c} <button onclick="deleteCategory('${c}')">&times;</button></span>`).join('');
+  document.getElementById('v-settings').innerHTML = `
+    <div class="panel noprint">
+      <p style="font-weight:600; margin:0 0 14px;">Maklumat syarikat</p>
+      <div class="field" style="margin-bottom:12px;"><label>Nama syarikat / perniagaan</label><input id="s-name" type="text" value="${(META.coName||'').replace(/"/g,'&quot;')}" placeholder="cth: Kedai Runcit Maju Enterprise"></div>
+      <div class="field" style="margin-bottom:12px;"><label>No. pendaftaran perniagaan (SSM)</label><input id="s-reg" type="text" value="${(META.coReg||'').replace(/"/g,'&quot;')}" placeholder="cth: 002836472-A"></div>
+      <div class="field" style="margin-bottom:12px;"><label>Alamat</label><input id="s-addr" type="text" value="${(META.coAddr||'').replace(/"/g,'&quot;')}" placeholder="cth: No 12, Jalan Besar, 89000 Keningau, Sabah"></div>
+      <div class="grid2">
+        <div class="field"><label>Telefon</label><input id="s-phone" type="text" value="${(META.coPhone||'').replace(/"/g,'&quot;')}" placeholder="cth: 087-123456"></div>
+        <div class="field"><label>Emel</label><input id="s-email" type="text" value="${(META.coEmail||'').replace(/"/g,'&quot;')}" placeholder="cth: nama@email.com"></div>
+      </div>
+      <div style="margin-top:16px;">
+        <label style="display:block; font-size:12px; color:var(--muted); margin-bottom:6px;">Logo syarikat</label>
+        <img id="logoPreview" src="${META.coLogo||''}" style="max-height:70px; max-width:200px; object-fit:contain; display:${META.coLogo?'block':'none'}; margin-bottom:8px; border:1px solid var(--line); border-radius:8px; padding:6px; background:#fff;">
+        <div style="display:flex; gap:8px; align-items:center;">
+          <input type="file" accept="image/*" onchange="handleLogo(this)" style="font-size:13px;">
+          ${META.coLogo?`<button onclick="removeLogo()">Buang logo</button>`:''}
+        </div>
+        <p class="empty" style="margin-top:6px;">Logo akan dikecilkan automatik & disimpan dalam Sheet anda.</p>
+      </div>
+      <button class="primary" style="width:100%; margin-top:18px;" onclick="saveSettings()">Simpan maklumat syarikat</button>
+    </div>
+    <div class="panel noprint">
+      <p style="font-weight:600; margin:0 0 12px;">Kategori Perbelanjaan</p>
+      <div class="cat-list">${catHtml}</div>
+      <div style="display:flex; gap:8px; margin-top:12px;">
+        <input id="new-cat" type="text" placeholder="Tambah kategori baru" style="flex:1;">
+        <button onclick="addCategory()">Tambah</button>
+      </div>
+      <p class="empty" style="margin-top:8px;">Menukar kategori tidak akan mengubah rekod sedia ada.</p>
+    </div>`;
+}
+
+// Auto-connect if URL already saved
+if(API){ document.getElementById('apiUrl').value = API; connect(); }
+</script>
+</body>
+</html>
