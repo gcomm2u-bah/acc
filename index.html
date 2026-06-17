@@ -1,578 +1,1089 @@
 <!DOCTYPE html>
-<html lang="ms">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Akaun Perniagaan — Cukai Pendapatan</title>
+<title>Rumah — Property Ledger</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  :root{
-    --bg:#f4f4f0; --card:#ffffff; --ink:#1c1c1a; --muted:#6b6b66; --line:#e2e2db;
-    --green:#1d9e75; --red:#d85a30; --blue:#185fa5; --accent:#0f6e56;
-  }
-  *{box-sizing:border-box;}
-  body{margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif; background:var(--bg); color:var(--ink); line-height:1.5;}
-  .wrap{max-width:840px; margin:0 auto; padding:20px 16px 60px;}
-  header h1{font-size:22px; margin:0 0 2px; font-weight:600;}
-  header p{margin:0; color:var(--muted); font-size:14px;}
-  .setup{background:#fff8e6; border:1px solid #f0d68a; border-radius:10px; padding:14px 16px; margin:16px 0; font-size:13px;}
-  .setup input{width:100%; margin-top:8px;}
-  .topbar{display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin:16px 0;}
-  .topbar label{font-size:13px; color:var(--muted);}
-  input,select,button{font-family:inherit; font-size:14px; padding:9px 11px; border:1px solid var(--line); border-radius:8px; background:#fff; color:var(--ink);}
-  button{cursor:pointer; background:#fff; transition:background .15s;}
-  button:hover{background:#f1f1ec;}
-  button.primary{background:var(--accent); color:#fff; border-color:var(--accent); font-weight:500;}
-  button.primary:hover{background:#0c5a47;}
-  .tabs{display:flex; gap:8px; flex-wrap:wrap; margin:18px 0;}
-  .tabs button{flex:1; min-width:90px;}
-  .tabs button.active{background:var(--ink); color:#fff; border-color:var(--ink);}
-  .cards{display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:12px; margin-bottom:20px;}
-  .stat{background:var(--card); border:1px solid var(--line); border-radius:10px; padding:16px;}
-  .stat .lbl{font-size:13px; color:var(--muted); margin-bottom:6px;}
-  .stat .val{font-size:22px; font-weight:600;}
-  .panel{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:18px 20px; margin-bottom:18px;}
-  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;}
-  .field label{display:block; font-size:12px; color:var(--muted); margin-bottom:4px;}
-  .field input,.field select{width:100%;}
-  table{width:100%; border-collapse:collapse; font-size:13px;}
-  th{text-align:left; color:var(--muted); font-weight:500; padding:8px 6px; border-bottom:1px solid var(--line);}
-  td{padding:9px 6px; border-bottom:1px solid var(--line);}
-  .right{text-align:right;}
-  .pos{color:var(--green);} .neg{color:var(--red);} .bl{color:var(--blue);}
-  .del{border:none; background:none; color:var(--red); cursor:pointer; padding:2px 6px; font-size:13px;}
-  .edit-btn{border:none; background:none; color:var(--blue); cursor:pointer; padding:2px 6px; font-size:13px;}
-  .empty{color:var(--muted); font-size:13px; padding:12px 0;}
-  .hide{display:none;}
-  .status{font-size:12px; color:var(--muted); margin-left:auto;}
-  .reportbox h2{margin:0 0 2px; font-size:18px;}
-  .reportbox .sub{color:var(--muted); font-size:14px; margin:0;}
-  .reportbox .yr{color:var(--muted); font-size:13px; margin:0 0 16px;}
-  .total-row td{font-weight:600; border-top:2px solid var(--ink); border-bottom:none; padding-top:12px;}
-  .note{font-size:11px; color:var(--muted); margin-top:16px;}
-  .cat-list{display:flex; flex-wrap:wrap; gap:6px; margin:8px 0;}
-  .cat-tag{background:#eef; border-radius:20px; padding:4px 10px; font-size:13px; display:flex; align-items:center; gap:4px;}
-  .cat-tag button{border:none; background:transparent; color:var(--red); cursor:pointer; font-size:14px; padding:0; line-height:1;}
-  @media print{ body{background:#fff;} .noprint{display:none!important;} .panel{border:none; padding:0;} }
+:root{
+  --bg:#F6F3EC; --surface:#FFFFFF; --ink:#2A2620; --ink-soft:#6B645A; --ink-faint:#A39C90;
+  --line:#E8E2D6; --accent:#1F6B4F; --accent-soft:#E6F0EA;
+  --income:#1F6B4F; --expense:#B14A3A; --vacant:#C08A2D;
+  --display:'Fraunces',serif; --body:'Inter',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);min-height:100vh}
+.app{display:flex;min-height:100vh}
+.page{padding:32px 40px;max-width:1180px;margin:0 auto;animation:fade .35s ease}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* sidebar */
+.sidebar{width:234px;background:rgba(255,255,255,.45);border-right:1px solid var(--line);padding:26px 16px;display:flex;flex-direction:column;position:sticky;top:0;height:100vh}
+.brand{display:flex;gap:11px;align-items:center;padding:0 8px 24px}
+.brandMark{width:36px;height:36px;border-radius:10px;background:var(--accent);color:#fff;display:grid;place-items:center;font-family:var(--display);font-weight:700;font-size:18px}
+.brandName{font-family:var(--display);font-size:21px;font-weight:600;letter-spacing:-.02em;line-height:1}
+.brandSub{font-size:10.5px;color:var(--ink-faint);letter-spacing:.08em;text-transform:uppercase;margin-top:3px}
+.nav{display:flex;flex-direction:column;gap:3px}
+.navbtn{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:10px;border:none;background:none;color:var(--ink-soft);font:500 13.5px var(--body);cursor:pointer;text-align:left;transition:.15s;position:relative;width:100%}
+.navbtn:hover{background:rgba(255,255,255,.55)}
+.navbtn.active{background:var(--surface);color:var(--ink);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.navbtn .badge{margin-left:auto;background:var(--expense);color:#fff;font-size:11px;font-weight:700;padding:1px 7px;border-radius:20px}
+.sideFoot{margin-top:auto;display:flex;gap:8px;padding:16px 8px 0;border-top:1px solid var(--line)}
+.sideStat{flex:1;display:flex;flex-direction:column}
+.sideStatNum{font-family:var(--display);font-size:24px;font-weight:600;color:var(--accent);line-height:1}
+.sideStatNum.vac{color:var(--vacant)}
+.sideStatLbl{font-size:11px;color:var(--ink-faint);margin-top:3px}
+.syncDot{font-size:10.5px;color:var(--ink-faint);padding:8px 8px 0;display:flex;align-items:center;gap:6px}
+.syncDot i{width:7px;height:7px;border-radius:50%;background:var(--accent);display:inline-block}
+.syncDot.saving i{background:var(--vacant);animation:pulse 1s infinite}
+.syncDot.err i{background:var(--expense)}
+@keyframes pulse{50%{opacity:.3}}
+
+.main{flex:1;min-width:0}
+.pageHead{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:26px;gap:16px;flex-wrap:wrap}
+h1{font-family:var(--display);font-size:32px;font-weight:600;letter-spacing:-.025em;line-height:1}
+.pageSub{color:var(--ink-soft);font-size:13.5px;margin-top:7px}
+.headActions{display:flex;gap:10px;align-items:center}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:22px}
+.cardHead{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.cardTitle{font-family:var(--display);font-size:17px;font-weight:600;letter-spacing:-.01em}
+
+/* buttons */
+.btn-primary{display:inline-flex;align-items:center;gap:7px;background:var(--accent);color:#fff;border:none;padding:10px 16px;border-radius:10px;font:600 13.5px var(--body);cursor:pointer;transition:.15s}
+.btn-primary:hover{background:#185640}
+.btn-primary:disabled{opacity:.4;cursor:not-allowed}
+.btn-primary.full{width:100%;justify-content:center;padding:13px;margin-top:8px;font-size:14px}
+.btn-ghost{display:inline-flex;align-items:center;gap:7px;background:var(--surface);color:var(--ink);border:1px solid var(--line);padding:9px 14px;border-radius:10px;font:600 13px var(--body);cursor:pointer;transition:.15s}
+.btn-ghost:hover{border-color:var(--ink-faint)}
+.btn-ghost.full{width:100%;justify-content:center;margin-top:12px}
+.btn-mini{background:var(--accent);color:#fff;border:none;padding:6px 12px;border-radius:8px;font:600 12px var(--body);cursor:pointer;white-space:nowrap}
+.btn-mini:hover{background:#185640}
+.btn-ghost-mini{background:transparent;color:var(--ink-soft);border:1px solid var(--line);padding:6px 12px;border-radius:8px;font:600 12px var(--body);cursor:pointer;white-space:nowrap}
+.btn-ghost-mini:hover{border-color:var(--ink-faint)}
+.icon-btn{background:transparent;border:1px solid var(--line);border-radius:7px;padding:5px;color:var(--ink-soft);cursor:pointer;display:inline-flex}
+.icon-btn:hover{color:var(--expense);border-color:var(--expense)}
+.link{display:inline-flex;align-items:center;gap:4px;background:none;border:none;color:var(--accent);font:600 12.5px var(--body);cursor:pointer}
+.link:hover{text-decoration:underline}
+
+.inp,.select{font:500 13.5px var(--body);color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:10px 12px;width:100%;outline:none;transition:.15s}
+.inp:focus,.select:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.select{cursor:pointer;padding:9px 12px}
+
+/* ledger strip */
+.ledgerStrip{display:flex;align-items:stretch;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px 8px;flex-wrap:wrap}
+.ledgerCell{flex:1;padding:0 20px;min-width:130px}
+.ledgerDiv{width:1px;background:var(--line);align-self:stretch}
+.ledgerLbl{font-size:11.5px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.06em;font-weight:600}
+.ledgerVal{font-family:var(--display);font-weight:600;margin-top:8px;display:flex;align-items:center;gap:4px;letter-spacing:-.02em;font-size:22px}
+.ledgerVal.big{font-size:30px}
+.ledgerTrend{font-size:12px;color:var(--ink-soft);margin-top:5px}
+
+.dashGrid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:18px}
+.full-col{grid-column:1/-1}
+.occRow{display:flex;gap:18px;align-items:center}
+.occLine{display:flex;align-items:center;gap:8px;font-size:13.5px;color:var(--ink-soft);margin-bottom:6px}
+.dot{width:9px;height:9px;border-radius:50%}
+.dot.occ{background:var(--accent)}.dot.vac{background:var(--vacant)}
+.occBarTrack{height:8px;background:var(--line);border-radius:20px;overflow:hidden;margin-top:8px}
+.occBarFill{height:100%;background:var(--accent);border-radius:20px;transition:width .6s}
+.vacantChips{display:flex;flex-wrap:wrap;gap:6px;margin-top:16px}
+.vacChip{font-size:11.5px;background:#FBF6EA;color:var(--vacant);border:1px solid #EDD9B0;padding:4px 9px;border-radius:7px;font-weight:600}
+.vacChipMore{font-size:11.5px;color:var(--ink-faint);padding:4px 6px;font-weight:600}
+.pctTag{background:var(--accent-soft);color:var(--accent);font-weight:700;font-size:13px;padding:3px 10px;border-radius:20px}
+.collectRow{display:flex;gap:28px}
+.miniLbl{font-size:11.5px;color:var(--ink-faint);font-weight:600}
+.miniVal{font-family:var(--display);font-size:19px;font-weight:600;margin-top:4px}
+
+.empty{display:flex;align-items:center;gap:8px;color:var(--ink-soft);font-size:13.5px;padding:16px 4px}
+.dueGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;margin-top:8px}
+.dueItem{display:flex;justify-content:space-between;align-items:center;padding:13px 15px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+.dueName{font-weight:600;font-size:14px}
+.dueRoom{font-size:12px;color:var(--ink-soft);margin-top:2px}
+.dueRight{display:flex;align-items:center;gap:12px}
+.dueAmt{font-family:var(--display);font-weight:600;font-size:15px;color:var(--expense)}
+.dueBanner{display:flex;align-items:center;gap:9px;background:#FBEDE9;border:1px solid #EDC9C0;color:var(--expense);padding:11px 15px;border-radius:11px;font-size:13.5px;margin-bottom:18px;font-weight:500}
+.dueItem.late{border-color:#EDC9C0;background:#FDF6F4}
+.lateBadge{font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;background:var(--expense);color:#fff;padding:2px 7px;border-radius:6px;margin-left:8px}
+.dueName .lateBadge{vertical-align:middle}
+.owedTag{font-size:11px;color:var(--expense);font-weight:600;margin-top:2px}
+.waPreview{background:#FBF9F4;border:1px solid var(--line);border-radius:11px;padding:16px;font-size:13.5px;line-height:1.55;white-space:pre-wrap;color:var(--ink);max-height:280px;overflow-y:auto;font-family:var(--body)}
+.waActions{display:flex;gap:10px;margin-top:14px}
+.btn-wa{display:inline-flex;align-items:center;justify-content:center;gap:8px;flex:1;background:#25D366;color:#fff;border:none;padding:12px;border-radius:10px;font:600 14px var(--body);cursor:pointer;text-decoration:none}
+.btn-wa:hover{background:#1da851}
+.btn-wa.disabled{background:var(--ink-faint);pointer-events:none}
+.reminderToggle{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--ink-soft);margin-top:10px}
+
+/* properties */
+.propList{display:flex;flex-direction:column;gap:14px}
+.propCard{padding:0;overflow:hidden}
+.propHead{width:100%;display:flex;justify-content:space-between;align-items:center;padding:18px 22px;background:none;border:none;cursor:pointer;text-align:left}
+.propHeadL{display:flex;gap:14px;align-items:center}
+.propIcon{width:42px;height:42px;border-radius:11px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center}
+.propName{font-family:var(--display);font-size:18px;font-weight:600}
+.propMeta{font-size:12.5px;color:var(--ink-soft);margin-top:3px}
+.propHeadR{display:flex;align-items:center;gap:14px;color:var(--ink-soft)}
+.propRevenue{font-family:var(--display);font-weight:600;font-size:15px;color:var(--accent)}
+.chev{transition:.2s}
+.roomWrap{padding:4px 22px 22px;border-top:1px solid var(--line)}
+.roomGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:11px;margin-top:16px}
+.roomCard{border:1px solid var(--line);border-radius:12px;padding:14px;background:var(--surface)}
+.roomCard.occ{border-color:#CFE3D7}
+.roomTop{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px}
+.roomLabel{font-family:var(--display);font-weight:600;font-size:15px}
+.roomStatus{font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:20px;text-transform:uppercase;letter-spacing:.04em}
+.roomStatus.occ{background:var(--accent-soft);color:var(--accent)}
+.roomStatus.vac{background:#FBF6EA;color:var(--vacant)}
+.roomTenant{font-size:13px;color:var(--ink);margin-bottom:12px;font-weight:500}
+.roomTenant .none{color:var(--ink-faint)}
+.roomBottom{display:flex;justify-content:space-between;align-items:center}
+.roomRent{font-family:var(--display);font-weight:600;font-size:15px}
+.addRoomCard{border:1.5px dashed var(--line);border-radius:12px;padding:14px;background:none;color:var(--ink-faint);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;cursor:pointer;font:600 12.5px var(--body);min-height:120px}
+.addRoomCard:hover{border-color:var(--accent);color:var(--accent)}
+
+/* tables */
+.searchBar{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:11px;padding:11px 15px;margin-bottom:18px}
+.searchBar input{border:none;background:none;outline:none;font-size:14px;width:100%;color:var(--ink)}
+.tbl{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.thead,.trow{display:grid;gap:12px;align-items:center}
+.thead{padding:12px 18px;background:#FBF9F4;font-size:11px;font-weight:700;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--line)}
+.trow{padding:14px 18px;border-bottom:1px solid var(--line);font-size:13.5px}
+.trow:last-child{border-bottom:none}
+.tName{font-weight:600}
+.tPhone{font-size:12px;color:var(--ink-soft);margin-top:2px}
+.tCell{color:var(--ink-soft)}
+.tEnd{display:flex;gap:6px;justify-content:flex-end}
+.receiptNo{font-family:var(--display);font-weight:600;color:var(--accent);font-size:13px}
+.subHead{font-family:var(--display);font-size:16px;font-weight:600;margin:26px 0 12px}
+.catTag{font-size:11.5px;background:#F2EDE3;color:var(--ink-soft);padding:3px 9px;border-radius:7px;font-weight:600}
+.green{color:var(--income);font-weight:600}
+.red{color:var(--expense);font-weight:600}
+
+.expForm{display:grid;grid-template-columns:1.1fr 1.2fr 1.2fr 2fr 1fr auto;gap:10px;align-items:center}
+
+/* chart */
+.chart{display:flex;align-items:flex-end;gap:6px;height:180px;margin-top:18px;padding:0 4px}
+.chartCol{flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;height:100%}
+.chartBars{flex:1;width:100%;display:flex;gap:3px;align-items:flex-end;justify-content:center}
+.barInc{width:40%;background:var(--income);border-radius:4px 4px 0 0;min-height:2px;transition:height .5s}
+.barExp{width:40%;background:var(--expense);border-radius:4px 4px 0 0;min-height:2px;transition:height .5s}
+.chartLbl{font-size:10.5px;color:var(--ink-faint);font-weight:600}
+.legend{display:flex;gap:18px;justify-content:center;margin-top:16px}
+.legItem{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--ink-soft)}
+.legDot{width:10px;height:10px;border-radius:3px}
+
+/* ring */
+.ring text{font-family:var(--display)}
+
+/* modal */
+.overlay{position:fixed;inset:0;background:rgba(42,38,32,.42);backdrop-filter:blur(3px);display:grid;place-items:center;padding:20px;z-index:100;animation:fade .2s}
+.modal{background:var(--surface);border-radius:18px;padding:28px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;position:relative;box-shadow:0 24px 60px rgba(0,0,0,.18)}
+.modalClose{position:absolute;top:18px;right:18px;background:none;border:none;color:var(--ink-faint);cursor:pointer;padding:4px;font-size:20px;line-height:1}
+.modalTitle{font-family:var(--display);font-size:22px;font-weight:600;letter-spacing:-.02em}
+.modalSub{color:var(--ink-soft);font-size:13px;margin-top:6px;margin-bottom:18px}
+.formGrid{display:grid;grid-template-columns:1fr 1fr;gap:13px;margin-top:16px;margin-bottom:8px}
+.field{display:flex;flex-direction:column;gap:6px}
+.fieldLbl{font-size:11.5px;font-weight:600;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.04em}
+
+/* documents */
+.docHead{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.doc{border:1px solid var(--line);border-radius:12px;padding:32px;background:#FEFDFB}
+.docTop{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid var(--ink);padding-bottom:16px;margin-bottom:18px}
+.docBrand{font-family:var(--display);font-size:20px;font-weight:700;letter-spacing:.02em}
+.docNo{font-size:12px;color:var(--ink-soft);margin-top:4px;font-weight:600}
+.docDate{font-size:12px;color:var(--ink-soft)}
+.docPara{font-size:13px;line-height:1.6;color:var(--ink-soft);margin-bottom:18px}
+.docCols{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px}
+.docLbl{font-size:10.5px;font-weight:700;color:var(--ink-faint);letter-spacing:.06em;margin-bottom:6px}
+.docVal{font-weight:600;font-size:14px;margin-bottom:4px}
+.docMini{font-size:12px;color:var(--ink-soft);margin-top:2px}
+.docTerms{display:grid;grid-template-columns:1fr 1fr;gap:0 28px;background:#FBF9F4;border-radius:10px;padding:14px 18px;margin-bottom:18px}
+.docClause{font-size:12px;line-height:1.9;color:var(--ink-soft);margin-bottom:26px}
+.signRow{display:flex;gap:40px}
+.signBox{flex:1;font-size:12px;color:var(--ink-soft);font-weight:600}
+.signLine{border-top:1px solid var(--ink);margin-bottom:8px;margin-top:34px}
+.term{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line);font-size:13px}
+.term .k{color:var(--ink-soft)}.term .v{font-weight:600}
+
+.receipt{border:1px solid var(--line);border-radius:12px;padding:32px;background:#FEFDFB}
+.rcTop{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px}
+.rcBrand{font-family:var(--display);font-size:20px;font-weight:700}
+.rcPaid{background:var(--accent-soft);color:var(--accent);font-weight:800;font-size:13px;padding:5px 14px;border-radius:8px;letter-spacing:.08em}
+.rcAmount{font-family:var(--display);font-size:38px;font-weight:700;color:var(--accent);margin:10px 0 22px;letter-spacing:-.02em}
+.rcGrid{border-top:1px solid var(--line);padding-top:6px}
+.rcFoot{font-size:12px;color:var(--ink-faint);margin-top:20px;padding-top:16px;border-top:1px solid var(--line);font-style:italic}
+
+/* connect screen */
+.connectWrap{min-height:100vh;display:grid;place-items:center;padding:24px}
+.connectCard{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:40px;max-width:480px;width:100%;box-shadow:0 10px 40px rgba(0,0,0,.06)}
+.connectMark{width:48px;height:48px;border-radius:13px;background:var(--accent);color:#fff;display:grid;place-items:center;font-family:var(--display);font-weight:700;font-size:24px;margin-bottom:20px}
+.loadWrap{min-height:100vh;display:flex;flex-direction:column;gap:14px;align-items:center;justify-content:center}
+.spinner{width:26px;height:26px;border-radius:50%;border:3px solid var(--line);border-top-color:var(--accent);animation:spin 1s linear infinite}
+
+@media print{
+  body *{visibility:hidden}
+  #printable,#printable *{visibility:visible}
+  #printable{position:absolute;left:0;top:0;width:100%;border:none}
+}
+@media(max-width:820px){
+  .app{flex-direction:column}
+  .sidebar{width:100%;height:auto;position:static;flex-direction:row;flex-wrap:wrap;align-items:center;padding:14px}
+  .nav{flex-direction:row;flex-wrap:wrap;flex:1}
+  .navbtn{width:auto}
+  .sideFoot{border:none;padding:0;margin:0;gap:14px}
+  .page{padding:22px 16px}
+  .dashGrid{grid-template-columns:1fr}
+  .formGrid{grid-template-columns:1fr}
+  .expForm{grid-template-columns:1fr 1fr}
+  .thead{display:none}
+  .trow{grid-template-columns:1fr 1fr!important;gap:6px}
+}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header>
-    <h1>Akaun Perniagaan</h1>
-    <p>Rekod pendapatan & perbelanjaan untuk cukai pendapatan</p>
-  </header>
-
-  <div class="setup noprint" id="setupBox">
-    <strong>Tetapan sekali sahaja:</strong> Tampal "Web app URL" daripada Google Apps Script anda di bawah, kemudian klik Sambung.
-    <input id="apiUrl" type="text" placeholder="https://script.google.com/macros/s/..../exec">
-    <div style="margin-top:8px; display:flex; gap:8px;">
-      <button class="primary" onclick="connect()">Sambung</button>
-      <span class="status" id="connStatus"></span>
-    </div>
-  </div>
-
-  <div id="app" class="hide">
-    <div class="topbar noprint">
-      <label>Tahun taksiran</label>
-      <select id="yearFilter" onchange="render()">
-        <option value="2026">2026</option>
-        <option value="2025">2025</option>
-        <option value="2024">2024</option>
-      </select>
-      <span class="status" id="syncStatus"></span>
-    </div>
-
-    <div class="tabs noprint">
-      <button id="t-dash" class="active" onclick="tab('dash')">Ringkasan</button>
-      <button id="t-income" onclick="tab('income')">Pendapatan</button>
-      <button id="t-expense" onclick="tab('expense')">Perbelanjaan</button>
-      <button id="t-recurring" onclick="tab('recurring')">Berulang</button>
-      <button id="t-report" onclick="tab('report')">Laporan</button>
-      <button id="t-settings" onclick="tab('settings')">Tetapan Syarikat</button>
-    </div>
-
-    <div id="v-dash"></div>
-    <div id="v-income" class="hide"></div>
-    <div id="v-expense" class="hide"></div>
-    <div id="v-recurring" class="hide"></div>
-    <div id="v-report" class="hide"></div>
-    <div id="v-settings" class="hide"></div>
-  </div>
-</div>
+<div id="app"></div>
 
 <script>
-// ---------- STATE ----------
-let API = localStorage.getItem('acc-api') || '';
-let META = { coName:'', coReg:'', coAddr:'', coPhone:'', coEmail:'', coLogo:'', expenseCategories:null, deletedRecurringIds:[] };
-let DATA = { income: [], expense: [], recurring: [] };
-let editingId = null;   // for income/expense edit mode
+/* ============================================================
+   CONFIG — paste your Apps Script Web App URL here.
+   You can also leave it blank and enter it on the connect screen
+   (it's remembered in this browser).
+   ============================================================ */
+var API_URL = "";
 
-// Default categories
-const DEFAULT_EXPENSE_CATS = ["Sewa premis","Gaji & upah","Utiliti (air/elektrik/internet)","Stok / bahan mentah","Pengangkutan & minyak","Pemasaran & iklan","Alat tulis & pejabat","Penyelenggaraan & pembaikan","Yuran profesional","Insurans","Telefon & komunikasi","Lain-lain"];
+// ---------- API layer ----------
+function apiUrl(){ return API_URL || localStorage.getItem("rumah_api") || ""; }
 
-function getExpenseCats(){ return META.expenseCategories || DEFAULT_EXPENSE_CATS; }
-
-// ---------- HELPERS ----------
-function fmt(n){ return 'RM ' + (Math.round(n*100)/100).toLocaleString('en-MY',{minimumFractionDigits:2,maximumFractionDigits:2}); }
-function yr(){ return document.getElementById('yearFilter').value; }
-function inYear(d){ return String(d||'').slice(0,4) === yr(); }
-function setSync(msg){ document.getElementById('syncStatus').textContent = msg; }
-
-// ---------- API ----------
 async function apiGet(){
-  const r = await fetch(API);
-  return await r.json();
+  var r = await fetch(apiUrl() + "?action=getAll", { method:"GET" });
+  var j = await r.json();
+  if(!j.ok) throw new Error(j.error||"load failed");
+  return j.data;
 }
-async function apiPost(body){
-  const r = await fetch(API, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify(body) });
-  return await r.json();
-}
-
-// ---------- CONNECT & LOAD ----------
-async function connect(){
-  const url = document.getElementById('apiUrl').value.trim();
-  if(!url){ document.getElementById('connStatus').textContent = 'Sila tampal URL.'; return; }
-  API = url;
-  document.getElementById('connStatus').textContent = 'Menyambung...';
+async function apiPost(payload){
+  setSync("saving");
   try{
-    const d = await apiGet();
-    if(d.error) throw new Error(d.error);
-    DATA = { income: d.income||[], expense: d.expense||[], recurring: d.recurring||[] };
-    if(d.settings){
-      META = Object.assign(META, d.settings);
-      if(!META.expenseCategories) META.expenseCategories = null;
-      if(!META.deletedRecurringIds) META.deletedRecurringIds = [];
-    }
-    localStorage.setItem('acc-api', API);
-    document.getElementById('setupBox').classList.add('hide');
-    document.getElementById('app').classList.remove('hide');
-    // Generate recurring records after loading
-    await generateRecurringRecords();
-    render();
-  }catch(err){
-    document.getElementById('connStatus').textContent = 'Gagal: ' + err.message + ' — semak URL & tetapan deployment.';
-  }
+    var r = await fetch(apiUrl(), {
+      method:"POST",
+      headers:{"Content-Type":"text/plain;charset=utf-8"},
+      body:JSON.stringify(payload)
+    });
+    var j = await r.json();
+    if(!j.ok) throw new Error(j.error||"save failed");
+    setSync("ok");
+    return j.result;
+  }catch(e){ setSync("err"); throw e; }
 }
+var insertRow  = function(table,row){ return apiPost({action:"insert",table:table,row:row}); };
+var updateRow  = function(table,row){ return apiPost({action:"update",table:table,row:row}); };
+var deleteRow  = function(table,id){  return apiPost({action:"delete",table:table,id:id}); };
+var replaceAll = function(table,rows){return apiPost({action:"replaceAll",table:table,rows:rows}); };
+var saveReceiptPDF = function(paymentId, html){ return apiPost({action:"saveReceiptPDF", paymentId:paymentId, receiptHTML:html}); };
+var setAppConfig   = function(key, value){ return apiPost({action:"setConfig", key:key, value:value}); };
 
-// ---------- RECURRING LOGIC ----------
-function getRecurrenceDates(template, upToDate){
-  // Returns array of date strings (YYYY-MM-DD) from startDate up to upToDate inclusive
-  const dates = [];
-  if(!template.startDate) return dates;
-  let current = new Date(template.startDate + 'T00:00:00');
-  const end = new Date(upToDate + 'T00:00:00');
-  while(current <= end){
-    dates.push(current.toISOString().slice(0,10));
-    if(template.frequency === 'monthly'){
-      current.setMonth(current.getMonth() + 1);
-    } else if(template.frequency === 'yearly'){
-      current.setFullYear(current.getFullYear() + 1);
-    } else if(template.frequency === 'weekly'){
-      current.setDate(current.getDate() + 7);
-    } else break;
-  }
-  return dates;
-}
+// ---------- helpers ----------
+var MONTHS=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+function RM(n){return "RM "+Number(n||0).toLocaleString("en-MY",{minimumFractionDigits:2,maximumFractionDigits:2});}
+function todayISO(){var d=new Date();return d.toISOString().slice(0,10);}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7);}
+function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
+function el(id){return document.getElementById(id);}
 
-async function generateRecurringRecords(){
-  if(!DATA.recurring || DATA.recurring.length===0) return;
-  const today = new Date().toISOString().slice(0,10);
-  const deletedSet = new Set(META.deletedRecurringIds || []);
-  let newRecords = false;
-  for(const tpl of DATA.recurring){
-    const occDates = getRecurrenceDates(tpl, today);
-    for(const dateStr of occDates){
-      const genId = `rec_${tpl.id}_${dateStr}`;
-      if(deletedSet.has(genId)) continue;
-      const targetArr = tpl.type === 'income' ? DATA.income : DATA.expense;
-      const exists = targetArr.some(r => r.id === genId);
-      if(!exists){
-        const rec = {
-          id: genId,
-          date: dateStr,
-          desc: tpl.desc,
-          amt: tpl.amt,
-          cat: tpl.cat || '',
-          recurringTemplateId: tpl.id
-        };
-        targetArr.push(rec);
-        try{ await apiPost({action:'add', type:tpl.type, record:rec}); }catch(e){}
-        newRecords = true;
-      }
-    }
-  }
-  if(newRecords){
-    // Re-sort by date (newest first) after generating
-    DATA.income.sort((a,b)=>String(b.date).localeCompare(String(a.date)));
-    DATA.expense.sort((a,b)=>String(b.date).localeCompare(String(a.date)));
-  }
-}
+// ---------- state ----------
+var DB={Properties:[],Rooms:[],Tenants:[],Payments:[],Expenses:[],Config:{}};
+var TAB="dashboard";
+var openProp=null, editRoomId=null, tenantQuery="", rentFilter="all", reportYear=new Date().getFullYear();
+var syncState="ok";
 
-// ---------- ACTIONS (CRUD) ----------
-function val(id){ return document.getElementById(id).value; }
+function setSync(s){ syncState=s; var d=el("syncDot"); if(d){ d.className="syncDot "+(s==="ok"?"":s); d.querySelector("span").textContent = s==="saving"?"Saving…":s==="err"?"Sync error":"All saved"; } }
 
-async function saveSettings(){
-  META.coName  = val('s-name');
-  META.coReg   = val('s-reg');
-  META.coAddr  = val('s-addr');
-  META.coPhone = val('s-phone');
-  META.coEmail = val('s-email');
-  setSync('Menyimpan tetapan...');
+// derived
+function rooms(){ return DB.Rooms.map(function(r){ var p=DB.Properties.find(function(x){return x.id===r.propId;}); return Object.assign({},r,{propName:p?p.name:"?",dueDay:p?p.dueDay||1:1}); }); }
+function tenantById(id){ return DB.Tenants.find(function(t){return t.id===id;}); }
+function roomById(id){ return rooms().find(function(r){return r.id===id;}); }
+function occupiedRooms(){ return rooms().filter(function(r){return r.tenantId;}); }
+function vacantRooms(){ return rooms().filter(function(r){return !r.tenantId;}); }
+
+// ============================================================
+//  BOOT
+// ============================================================
+async function boot(){
+  if(!apiUrl()){ renderConnect(); return; }
+  renderLoading();
   try{
-    await apiPost({action:'saveSettings', settings:META});
-    setSync('Tetapan disimpan ✓');
+    var data = await apiGet();
+    DB.Properties = data.Properties || [];
+    DB.Rooms      = data.Rooms || [];
+    DB.Tenants    = data.Tenants || [];
+    DB.Payments   = data.Payments || [];
+    DB.Expenses   = data.Expenses || [];
+    DB.Config     = data.Config || {};
     render();
-  }catch(e){ setSync('Ralat menyimpan tetapan'); }
-}
-
-function handleLogo(input){
-  const file = input.files[0];
-  if(!file) return;
-  if(file.size > 1500000){ alert('Saiz logo terlalu besar. Sila guna imej bawah 1.5 MB.'); return; }
-  const reader = new FileReader();
-  reader.onload = function(e){
-    const img = new Image();
-    img.onload = function(){
-      const max = 300;
-      const scale = Math.min(1, max / img.width);
-      const c = document.createElement('canvas');
-      c.width = img.width * scale; c.height = img.height * scale;
-      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
-      META.coLogo = c.toDataURL('image/png');
-      document.getElementById('logoPreview').src = META.coLogo;
-      document.getElementById('logoPreview').style.display = 'block';
-      saveSettings();
-    };
-    img.src = e.target.result;
-  };
-  reader.readAsDataURL(file);
-}
-
-function removeLogo(){
-  META.coLogo = '';
-  document.getElementById('logoPreview').style.display = 'none';
-  saveSettings();
-}
-
-// Income & Expense (add / update)
-async function saveIncomeExpense(type){
-  const date = val(type==='income'?'i-date':'e-date');
-  const desc = val(type==='income'?'i-desc':'e-desc').trim();
-  const amt = parseFloat(val(type==='income'?'i-amt':'e-amt'));
-  const cat = type==='expense' ? val('e-cat') : '';
-  if(!date||!desc||isNaN(amt)){ alert('Sila isi tarikh, keterangan dan jumlah.'); return; }
-  if(editingId){
-    // Update existing record
-    const arr = DATA[type];
-    const idx = arr.findIndex(r => String(r.id) === String(editingId));
-    if(idx===-1){ alert('Rekod tidak dijumpai.'); return; }
-    arr[idx].date = date;
-    arr[idx].desc = desc;
-    arr[idx].amt = amt;
-    if(type==='expense') arr[idx].cat = cat;
-    setSync('Mengemaskini...');
-    try{ await apiPost({action:'update', type, record: arr[idx]}); setSync('Rekod dikemaskini ✓'); }
-    catch(e){ setSync('Ralat mengemaskini'); }
-    editingId = null;
-  }else{
-    // Add new
-    const rec = { id: Date.now(), date, desc, amt, cat };
-    setSync('Menyimpan...');
-    DATA[type].push(rec);
-    try{ await apiPost({action:'add', type, record:rec}); setSync('Disimpan ke Google Sheet ✓'); }
-    catch(e){ setSync('Ralat menyimpan'); }
+  }catch(e){
+    renderConnect("Couldn't reach that URL. Check it ends with /exec and the deployment allows 'Anyone'. ("+e.message+")");
   }
-  DATA.income.sort((a,b)=>String(b.date).localeCompare(String(a.date)));
-  DATA.expense.sort((a,b)=>String(b.date).localeCompare(String(a.date)));
-  render();
 }
 
-async function del(type, id){
-  if(!confirm('Padam rekod ini?')) return;
-  setSync('Memadam...');
-  DATA[type] = DATA[type].filter(x => String(x.id) !== String(id));
-  try{ await apiPost({action:'delete', type, id}); setSync('Dipadam ✓'); }
-  catch(e){ setSync('Ralat memadam'); }
-  // If it was a generated recurring record, add to deleted list so it won't regenerate
-  if(id.startsWith('rec_') && (type==='income'||type==='expense')){
-    META.deletedRecurringIds.push(id);
-    await apiPost({action:'saveSettings', settings:META}).catch(()=>{});
-  }
-  render();
+function renderLoading(){
+  el("app").innerHTML='<div class="loadWrap"><div class="spinner"></div><span style="color:var(--ink-soft)">Loading your ledger…</span></div>';
 }
 
-function editRecord(type, id){
-  const arr = DATA[type];
-  const rec = arr.find(r => String(r.id) === String(id));
-  if(!rec) return;
-  editingId = id;
-  if(type==='income'){
-    document.getElementById('i-date').value = rec.date;
-    document.getElementById('i-desc').value = rec.desc;
-    document.getElementById('i-amt').value = rec.amt;
-    document.querySelector('#v-income .primary').textContent = 'Kemaskini pendapatan';
-  }else{
-    document.getElementById('e-date').value = rec.date;
-    document.getElementById('e-cat').value = rec.cat || getExpenseCats()[0];
-    document.getElementById('e-desc').value = rec.desc;
-    document.getElementById('e-amt').value = rec.amt;
-    document.querySelector('#v-expense .primary').textContent = 'Kemaskini perbelanjaan';
-  }
-  // Scroll to top
-  window.scrollTo({top:0, behavior:'smooth'});
+function renderConnect(errMsg){
+  var saved = localStorage.getItem("rumah_api")||"";
+  el("app").innerHTML =
+  '<div class="connectWrap"><div class="connectCard">'+
+    '<div class="connectMark">R</div>'+
+    '<h1 style="font-size:26px">Connect your sheet</h1>'+
+    '<p class="pageSub" style="margin-bottom:20px">Paste the Apps Script Web App URL (ends with <b>/exec</b>). It\'s saved in this browser so you only do this once per device.</p>'+
+    (errMsg?'<div class="dueBanner">'+esc(errMsg)+'</div>':'')+
+    '<input class="inp" id="apiInput" placeholder="https://script.google.com/macros/s/…/exec" value="'+esc(saved)+'" style="margin-bottom:14px">'+
+    '<button class="btn-primary full" onclick="saveApi()">Connect</button>'+
+    '<p class="pageSub" style="margin-top:16px;font-size:12px">First time? Open the setup guide included with these files.</p>'+
+  '</div></div>';
+}
+function saveApi(){
+  var v=el("apiInput").value.trim();
+  if(!v) return;
+  localStorage.setItem("rumah_api",v);
+  API_URL=v;
+  boot();
 }
 
-// Recurring templates
-async function saveRecurring(){
-  const id = val('r-id') || Date.now().toString();
-  const type = val('r-type');
-  const desc = val('r-desc').trim();
-  const amt = parseFloat(val('r-amt'));
-  const startDate = val('r-start');
-  const freq = val('r-freq');
-  const cat = type==='expense' ? val('r-cat') : '';
-  if(!desc||isNaN(amt)||!startDate||!freq){ alert('Sila isi semua medan wajib.'); return; }
-  const tpl = { id, type, desc, amt, startDate, frequency:freq, cat };
-  const existingIdx = DATA.recurring.findIndex(r => r.id === id);
-  if(existingIdx > -1){
-    DATA.recurring[existingIdx] = tpl;
-    setSync('Mengemaskini templat...');
-    try{ await apiPost({action:'updateRecurring', template:tpl}); setSync('Templat dikemaskini ✓'); }
-    catch(e){ setSync('Ralat mengemaskini templat'); }
-  }else{
-    DATA.recurring.push(tpl);
-    setSync('Menambah templat...');
-    try{ await apiPost({action:'addRecurring', template:tpl}); setSync('Templat disimpan ✓'); }
-    catch(e){ setSync('Ralat menyimpan templat'); }
-  }
-  // Clear form
-  document.getElementById('r-id').value = '';
-  document.getElementById('r-type').value = 'expense';
-  document.getElementById('r-desc').value = '';
-  document.getElementById('r-amt').value = '';
-  document.getElementById('r-start').value = '';
-  document.getElementById('r-freq').value = 'monthly';
-  document.getElementById('r-cat').value = getExpenseCats()[0];
-  document.querySelector('#v-recurring .primary').textContent = 'Simpan Templat';
-  // Regenerate records
-  await generateRecurringRecords();
-  render();
-}
-
-function editRecurring(id){
-  const tpl = DATA.recurring.find(r => r.id === id);
-  if(!tpl) return;
-  document.getElementById('r-id').value = tpl.id;
-  document.getElementById('r-type').value = tpl.type;
-  document.getElementById('r-desc').value = tpl.desc;
-  document.getElementById('r-amt').value = tpl.amt;
-  document.getElementById('r-start').value = tpl.startDate;
-  document.getElementById('r-freq').value = tpl.frequency;
-  if(tpl.type==='expense') document.getElementById('r-cat').value = tpl.cat || getExpenseCats()[0];
-  document.querySelector('#v-recurring .primary').textContent = 'Kemaskini Templat';
-}
-
-async function deleteRecurring(id){
-  if(!confirm('Padam templat ini? (Rekod yang telah dijana tidak akan dipadam)')) return;
-  setSync('Memadam templat...');
-  DATA.recurring = DATA.recurring.filter(r => r.id !== id);
-  try{ await apiPost({action:'deleteRecurring', id}); setSync('Templat dipadam ✓'); }
-  catch(e){ setSync('Ralat memadam templat'); }
-  render();
-}
-
-// ---------- CATEGORY MANAGEMENT ----------
-function addCategory(){
-  const newCat = val('new-cat').trim();
-  if(!newCat) return;
-  let cats = [...getExpenseCats()];
-  if(cats.includes(newCat)){ alert('Kategori sudah wujud.'); return; }
-  cats.push(newCat);
-  META.expenseCategories = cats;
-  saveSettings(); // will trigger render after save
-}
-
-function deleteCategory(cat){
-  let cats = getExpenseCats().filter(c => c !== cat);
-  META.expenseCategories = cats.length ? cats : null; // null to fallback to default
-  saveSettings();
-}
-
-// ---------- TAB SWITCHING ----------
-function tab(t){
-  ['dash','income','expense','recurring','report','settings'].forEach(x=>{
-    document.getElementById('v-'+x).classList.toggle('hide', x!==t);
-    document.getElementById('t-'+x).classList.toggle('active', x===t);
-  });
-  if(t==='income'||t==='expense'){
-    editingId = null;
-    const btn = document.querySelector('#v-'+t+' .primary');
-    if(btn) btn.textContent = t==='income'?'+ Tambah pendapatan':'+ Tambah perbelanjaan';
-  }
-  render(); // ensure fresh data when switching tabs
-}
-
-// ---------- RENDERING ----------
-function totals(){
-  const inc = DATA.income.filter(x=>inYear(x.date)).reduce((s,x)=>s+Number(x.amt||0),0);
-  const exp = DATA.expense.filter(x=>inYear(x.date)).reduce((s,x)=>s+Number(x.amt||0),0);
-  return {inc, exp, net: inc-exp};
-}
+// ============================================================
+//  MAIN RENDER
+// ============================================================
+function go(tab){ TAB=tab; editRoomId=null; render(); }
 
 function render(){
-  const t = totals();
-  document.getElementById('v-dash').innerHTML = `
-    <div class="cards">
-      <div class="stat"><div class="lbl">Jumlah pendapatan</div><div class="val pos">${fmt(t.inc)}</div></div>
-      <div class="stat"><div class="lbl">Jumlah perbelanjaan</div><div class="val neg">${fmt(t.exp)}</div></div>
-      <div class="stat"><div class="lbl">Untung bersih (boleh cukai)</div><div class="val ${t.net>=0?'bl':'neg'}">${fmt(t.net)}</div></div>
-    </div>
-    <p class="empty">Untung bersih ialah anggaran pendapatan perniagaan boleh cukai sebelum potongan peribadi & rebat, untuk tahun taksiran ${yr()}.</p>`;
+  var occ=occupiedRooms().length, vac=vacantRooms().length;
+  var due=dueList();
+  var nav=[
+    ["dashboard","Overview","M3 12l9-9 9 9M5 10v10h14V10"],
+    ["properties","Houses & Rooms","B"],
+    ["tenants","Tenants","U"],
+    ["rent","Rent & Receipts","R"],
+    ["expenses","Expenses","W"],
+    ["reports","Reports","F"]
+  ];
+  var navHtml = nav.map(function(n){
+    var badge = (n[0]==="rent" && due.length)?'<span class="badge">'+due.length+'</span>':'';
+    return '<button class="navbtn'+(TAB===n[0]?' active':'')+'" onclick="go(\''+n[0]+'\')">'+icon(n[0])+'<span>'+n[1]+'</span>'+badge+'</button>';
+  }).join("");
 
-  // ----- INCOME -----
-  const ir = DATA.income.filter(x=>inYear(x.date)).sort((a,b)=>String(b.date).localeCompare(String(a.date)));
-  document.getElementById('v-income').innerHTML = `
-    <div class="panel noprint">
-      <div class="grid2">
-        <div class="field"><label>Tarikh</label><input id="i-date" type="date"></div>
-        <div class="field"><label>Jumlah (RM)</label><input id="i-amt" type="number" step="0.01" placeholder="0.00"></div>
-      </div>
-      <div class="field"><label>Keterangan</label><input id="i-desc" type="text" placeholder="cth: Jualan invois #001"></div>
-      <button class="primary" style="margin-top:12px; width:100%;" onclick="saveIncomeExpense('income')">+ Tambah pendapatan</button>
-    </div>
-    ${ir.length?`<table><thead><tr><th>Tarikh</th><th>Keterangan</th><th class="right">Jumlah</th><th></th></tr></thead><tbody>
-      ${ir.map(x=>`<tr><td>${x.date}</td><td>${x.desc}</td><td class="right pos">${fmt(Number(x.amt))}</td>
-        <td class="right" style="white-space:nowrap;"><button class="edit-btn" onclick="editRecord('income','${x.id}')">Edit</button> <button class="del" onclick="del('income','${x.id}')">Padam</button></td></tr>`).join('')}
-      </tbody></table>`:`<p class="empty">Belum ada rekod pendapatan untuk ${yr()}.</p>`}`;
+  var body="";
+  if(TAB==="dashboard") body=viewDashboard();
+  else if(TAB==="properties") body=viewProperties();
+  else if(TAB==="tenants") body=viewTenants();
+  else if(TAB==="rent") body=viewRent();
+  else if(TAB==="expenses") body=viewExpenses();
+  else if(TAB==="reports") body=viewReports();
 
-  // ----- EXPENSE -----
-  const er = DATA.expense.filter(x=>inYear(x.date)).sort((a,b)=>String(b.date).localeCompare(String(a.date)));
-  const catList = getExpenseCats();
-  document.getElementById('v-expense').innerHTML = `
-    <div class="panel noprint">
-      <div class="grid2">
-        <div class="field"><label>Tarikh</label><input id="e-date" type="date"></div>
-        <div class="field"><label>Jumlah (RM)</label><input id="e-amt" type="number" step="0.01" placeholder="0.00"></div>
-      </div>
-      <div class="field"><label>Kategori</label><select id="e-cat">${catList.map(c=>`<option>${c}</option>`).join('')}</select></div>
-      <div class="field" style="margin-top:12px;"><label>Keterangan</label><input id="e-desc" type="text" placeholder="cth: Bayaran sewa kedai"></div>
-      <button class="primary" style="margin-top:12px; width:100%;" onclick="saveIncomeExpense('expense')">+ Tambah perbelanjaan</button>
-    </div>
-    ${er.length?`<table><thead><tr><th>Tarikh</th><th>Kategori</th><th>Keterangan</th><th class="right">Jumlah</th><th></th></tr></thead><tbody>
-      ${er.map(x=>`<tr><td>${x.date}</td><td style="font-size:12px;">${x.cat||''}</td><td>${x.desc}</td><td class="right neg">${fmt(Number(x.amt))}</td>
-        <td class="right" style="white-space:nowrap;"><button class="edit-btn" onclick="editRecord('expense','${x.id}')">Edit</button> <button class="del" onclick="del('expense','${x.id}')">Padam</button></td></tr>`).join('')}
-      </tbody></table>`:`<p class="empty">Belum ada rekod perbelanjaan untuk ${yr()}.</p>`}`;
-
-  // ----- RECURRING -----
-  const recTplHtml = DATA.recurring.map(r=>`
-    <tr>
-      <td>${r.desc}</td>
-      <td>${r.type==='income'?'Pendapatan':'Perbelanjaan'}</td>
-      <td>${fmt(r.amt)}</td>
-      <td>${r.frequency==='monthly'?'Bulanan':r.frequency==='yearly'?'Tahunan':'Mingguan'}</td>
-      <td>${r.startDate}</td>
-      <td>${r.cat||''}</td>
-      <td class="right" style="white-space:nowrap;">
-        <button class="edit-btn" onclick="editRecurring('${r.id}')">Edit</button>
-        <button class="del" onclick="deleteRecurring('${r.id}')">Padam</button>
-      </td>
-    </tr>
-  `).join('');
-  document.getElementById('v-recurring').innerHTML = `
-    <div class="panel noprint">
-      <p style="font-weight:600; margin:0 0 12px;">Tambah / Edit Templat Berulang</p>
-      <input type="hidden" id="r-id">
-      <div class="grid2">
-        <div class="field"><label>Jenis</label><select id="r-type" onchange="document.getElementById('r-cat-row').style.display=this.value==='expense'?'':'none'">
-          <option value="expense">Perbelanjaan</option>
-          <option value="income">Pendapatan</option>
-        </select></div>
-        <div class="field"><label>Jumlah (RM)</label><input id="r-amt" type="number" step="0.01" placeholder="0.00"></div>
-      </div>
-      <div class="field" style="margin-bottom:12px;"><label>Keterangan</label><input id="r-desc" type="text" placeholder="cth: Sewa bulanan"></div>
-      <div class="grid2">
-        <div class="field"><label>Mula</label><input id="r-start" type="date"></div>
-        <div class="field"><label>Kekerapan</label><select id="r-freq">
-          <option value="monthly">Bulanan</option>
-          <option value="yearly">Tahunan</option>
-          <option value="weekly">Mingguan</option>
-        </select></div>
-      </div>
-      <div class="field" id="r-cat-row"><label>Kategori</label><select id="r-cat">${catList.map(c=>`<option>${c}</option>`).join('')}</select></div>
-      <button class="primary" style="width:100%; margin-top:12px;" onclick="saveRecurring()">Simpan Templat</button>
-    </div>
-    ${DATA.recurring.length?`<table><thead><tr><th>Penerangan</th><th>Jenis</th><th>Amaun</th><th>Kekerapan</th><th>Mula</th><th>Kategori</th><th></th></tr></thead><tbody>${recTplHtml}</tbody></table>`:'<p class="empty">Belum ada templat berulang.</p>'}
-  `;
-
-  // ----- REPORT -----
-  const ct = {}; catList.forEach(c=>ct[c]=0);
-  DATA.expense.filter(x=>inYear(x.date)).forEach(x=>{ ct[x.cat]=(ct[x.cat]||0)+Number(x.amt||0); });
-  const used = Object.entries(ct).filter(([k,v])=>v>0);
-  const logoHtml = META.coLogo ? `<img src="${META.coLogo}" style="max-height:70px; max-width:200px; object-fit:contain;">` : '';
-  const detailLines = [
-    META.coReg ? 'No. Pendaftaran: ' + META.coReg : '',
-    META.coAddr || '',
-    [META.coPhone?('Tel: '+META.coPhone):'', META.coEmail||''].filter(Boolean).join('  •  ')
-  ].filter(Boolean).map(l=>`<p style="margin:1px 0; font-size:12px; color:var(--muted);">${l}</p>`).join('');
-  document.getElementById('v-report').innerHTML = `
-    <div class="panel reportbox" id="reportArea">
-      <div style="display:flex; align-items:flex-start; gap:16px; border-bottom:2px solid var(--ink); padding-bottom:14px; margin-bottom:18px;">
-        ${logoHtml ? `<div>${logoHtml}</div>` : ''}
-        <div style="flex:1;">
-          <h2 style="margin:0 0 2px; font-size:19px;">${META.coName||'(Nama syarikat belum diisi)'}</h2>
-          ${detailLines}
-        </div>
-      </div>
-      <p style="font-weight:600; font-size:16px; margin:0 0 2px;">Penyata Untung Rugi</p>
-      <p class="yr">Tahun taksiran ${yr()}</p>
-      <p style="font-weight:600; margin:0 0 6px;">Pendapatan</p>
-      <table style="margin-bottom:18px;"><tr><td>Jumlah pendapatan perniagaan</td><td class="right">${fmt(t.inc)}</td></tr></table>
-      <p style="font-weight:600; margin:0 0 6px;">Perbelanjaan mengikut kategori</p>
-      <table style="margin-bottom:18px;">
-        ${used.length?used.map(([k,v])=>`<tr><td>${k}</td><td class="right">${fmt(v)}</td></tr>`).join(''):'<tr><td class="empty">Tiada perbelanjaan direkodkan</td><td></td></tr>'}
-        <tr style="font-weight:600;"><td style="border-top:1px solid var(--line); padding-top:10px;">Jumlah perbelanjaan</td><td class="right" style="border-top:1px solid var(--line); padding-top:10px;">${fmt(t.exp)}</td></tr>
-      </table>
-      <table><tr class="total-row"><td>Untung bersih boleh cukai</td><td class="right ${t.net>=0?'bl':'neg'}">${fmt(t.net)}</td></tr></table>
-      <p class="note">Penyata ini adalah ringkasan rekod sahaja dan bukan nasihat percukaian. Sila rujuk LHDN atau perunding cukai bertauliah untuk pengisytiharan rasmi (Borang B/BE/P).</p>
-    </div>
-    <button class="primary noprint" style="width:100%; margin-top:12px;" onclick="window.print()">Cetak / Simpan PDF</button>`;
-
-  // ----- SETTINGS -----
-  const catHtml = catList.map(c=>`<span class="cat-tag">${c} <button onclick="deleteCategory('${c}')">&times;</button></span>`).join('');
-  document.getElementById('v-settings').innerHTML = `
-    <div class="panel noprint">
-      <p style="font-weight:600; margin:0 0 14px;">Maklumat syarikat</p>
-      <div class="field" style="margin-bottom:12px;"><label>Nama syarikat / perniagaan</label><input id="s-name" type="text" value="${(META.coName||'').replace(/"/g,'&quot;')}" placeholder="cth: Kedai Runcit Maju Enterprise"></div>
-      <div class="field" style="margin-bottom:12px;"><label>No. pendaftaran perniagaan (SSM)</label><input id="s-reg" type="text" value="${(META.coReg||'').replace(/"/g,'&quot;')}" placeholder="cth: 002836472-A"></div>
-      <div class="field" style="margin-bottom:12px;"><label>Alamat</label><input id="s-addr" type="text" value="${(META.coAddr||'').replace(/"/g,'&quot;')}" placeholder="cth: No 12, Jalan Besar, 89000 Keningau, Sabah"></div>
-      <div class="grid2">
-        <div class="field"><label>Telefon</label><input id="s-phone" type="text" value="${(META.coPhone||'').replace(/"/g,'&quot;')}" placeholder="cth: 087-123456"></div>
-        <div class="field"><label>Emel</label><input id="s-email" type="text" value="${(META.coEmail||'').replace(/"/g,'&quot;')}" placeholder="cth: nama@email.com"></div>
-      </div>
-      <div style="margin-top:16px;">
-        <label style="display:block; font-size:12px; color:var(--muted); margin-bottom:6px;">Logo syarikat</label>
-        <img id="logoPreview" src="${META.coLogo||''}" style="max-height:70px; max-width:200px; object-fit:contain; display:${META.coLogo?'block':'none'}; margin-bottom:8px; border:1px solid var(--line); border-radius:8px; padding:6px; background:#fff;">
-        <div style="display:flex; gap:8px; align-items:center;">
-          <input type="file" accept="image/*" onchange="handleLogo(this)" style="font-size:13px;">
-          ${META.coLogo?`<button onclick="removeLogo()">Buang logo</button>`:''}
-        </div>
-        <p class="empty" style="margin-top:6px;">Logo akan dikecilkan automatik & disimpan dalam Sheet anda.</p>
-      </div>
-      <button class="primary" style="width:100%; margin-top:18px;" onclick="saveSettings()">Simpan maklumat syarikat</button>
-    </div>
-    <div class="panel noprint">
-      <p style="font-weight:600; margin:0 0 12px;">Kategori Perbelanjaan</p>
-      <div class="cat-list">${catHtml}</div>
-      <div style="display:flex; gap:8px; margin-top:12px;">
-        <input id="new-cat" type="text" placeholder="Tambah kategori baru" style="flex:1;">
-        <button onclick="addCategory()">Tambah</button>
-      </div>
-      <p class="empty" style="margin-top:8px;">Menukar kategori tidak akan mengubah rekod sedia ada.</p>
-    </div>`;
+  el("app").innerHTML =
+  '<div class="app">'+
+    '<aside class="sidebar">'+
+      '<div class="brand"><div class="brandMark">R</div><div><div class="brandName">Rumah</div><div class="brandSub">property ledger</div></div></div>'+
+      '<nav class="nav">'+navHtml+'</nav>'+
+      '<div class="sideFoot">'+
+        '<div class="sideStat"><span class="sideStatNum">'+occ+'</span><span class="sideStatLbl">occupied</span></div>'+
+        '<div class="sideStat"><span class="sideStatNum vac">'+vac+'</span><span class="sideStatLbl">vacant</span></div>'+
+      '</div>'+
+      '<div class="syncDot '+(syncState==="ok"?"":syncState)+'" id="syncDot"><i></i><span>'+(syncState==="saving"?"Saving…":syncState==="err"?"Sync error":"All saved")+'</span></div>'+
+    '</aside>'+
+    '<main class="main">'+body+'</main>'+
+  '</div>';
 }
 
-// Auto-connect if URL already saved
-if(API){ document.getElementById('apiUrl').value = API; connect(); }
+function icon(k){
+  var p={dashboard:'<path d="M3 13h8V3H3zM13 21h8v-6h-8zM13 3v8h8V3zM3 21h8v-4H3z"/>',
+    properties:'<path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6"/>',
+    tenants:'<path d="M16 21v-2a4 4 0 0 0-8 0v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/>',
+    rent:'<path d="M4 4h16v16H4zM8 8h8M8 12h8M8 16h5"/>',
+    expenses:'<path d="M3 7h18v12H3zM3 7l2-3h14l2 3M12 12v3M9 13.5h6"/>',
+    reports:'<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>'};
+  return '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+(p[k]||"")+'</svg>';
+}
+
+function pageHead(title,sub,actions){
+  return '<div class="pageHead"><div><h1>'+esc(title)+'</h1>'+(sub?'<p class="pageSub">'+sub+'</p>':'')+'</div><div class="headActions">'+(actions||"")+'</div></div>';
+}
+
+/* ---------------------------------------------------------
+   PER‑HOUSE DUE DATE & DEPOSIT RULE
+   --------------------------------------------------------- */
+function dueDayFromProp(prop) { return Number(prop.dueDay) || 1; }
+function depositMultiplier(prop) { return Number(prop.depositRule) || 2; }
+
+function dueList(){
+  var now=new Date(), m=now.getMonth(), y=now.getFullYear(), today=now.getDate();
+  var paid={};
+  DB.Payments.forEach(function(p){ paid[p.tenantId+"|"+p.forYear+"|"+p.forMonth]=true; });
+
+  return occupiedRooms().map(function(r){
+    var t=tenantById(r.tenantId);
+    if(!t) return null;
+    var prop = DB.Properties.find(function(p){return p.id===r.propId;});
+    var dueDay = dueDayFromProp(prop);
+
+    var start=t.moveIn?new Date(t.moveIn):new Date(y,0,1);
+    var sy=start.getFullYear(), sm=start.getMonth();
+    var overdueMonths=[];
+    var curUnpaid=false;
+    var yy=sy, mm=sm;
+    while(yy<y || (yy===y && mm<=m)){
+      var isPaid=paid[t.id+"|"+yy+"|"+mm];
+      if(!isPaid){
+        if(yy===y && mm===m){ curUnpaid=true; }
+        else { overdueMonths.push({y:yy,m:mm}); }
+      }
+      mm++; if(mm>11){mm=0;yy++;}
+    }
+
+    var owesCurrent = curUnpaid;
+    var anyUnpaid = owesCurrent || overdueMonths.length>0;
+    if(!anyUnpaid) return null;
+
+    var late = overdueMonths.length>0 || (owesCurrent && today>dueDay);
+    var monthsOwed = overdueMonths.length + (owesCurrent?1:0);
+    var amountOwed = monthsOwed * (+r.rent);
+
+    return {room:r, tenant:t, late:late, overdueMonths:overdueMonths,
+            owesCurrent:owesCurrent, monthsOwed:monthsOwed, amountOwed:amountOwed, dueDay:dueDay};
+  }).filter(function(x){ return x; });
+}
+
+function sums(){
+  var now=new Date(), m=now.getMonth(), y=now.getFullYear();
+  var mi=0,me=0,yi=0,ye=0;
+  DB.Payments.forEach(function(p){var d=new Date(p.date); if(d.getMonth()===m&&d.getFullYear()===y)mi+=+p.amount; if(d.getFullYear()===y)yi+=+p.amount;});
+  DB.Expenses.forEach(function(e){var d=new Date(e.date); if(d.getMonth()===m&&d.getFullYear()===y)me+=+e.amount; if(d.getFullYear()===y)ye+=+e.amount;});
+  var expected=occupiedRooms().reduce(function(s,r){return s+(+r.rent);},0);
+  return {mi:mi,me:me,yi:yi,ye:ye,expected:expected,m:m,y:y};
+}
+
+// ============================================================
+//  VIEWS
+// ============================================================
+function viewDashboard(){
+  var s=sums(), occ=occupiedRooms(), vac=vacantRooms(), all=rooms();
+  var due=dueList();
+  var occRate=all.length?Math.round(occ.length/all.length*100):0;
+  var collected=s.expected?Math.round(s.mi/s.expected*100):0;
+  var net=s.mi-s.me;
+
+  var ledger='<div class="ledgerStrip">'+
+    ledgerCell("Collected this month",RM(s.mi),"of "+RM(s.expected)+" expected","var(--income)",true)+
+    '<div class="ledgerDiv"></div>'+
+    ledgerCell("Expenses",RM(s.me),"","var(--expense)")+
+    '<div class="ledgerDiv"></div>'+
+    ledgerCell("Net this month",RM(net),"",net>=0?"var(--income)":"var(--expense)")+
+    '<div class="ledgerDiv"></div>'+
+    ledgerCell("Year to date",RM(s.yi-s.ye),RM(s.yi)+" in · "+RM(s.ye)+" out","var(--ink)")+
+  '</div>';
+
+  var vacChips=vac.length?'<div class="vacantChips">'+
+    vac.slice(0,8).map(function(r){return '<span class="vacChip">'+esc(r.propName)+' · '+esc(r.label)+'</span>';}).join("")+
+    (vac.length>8?'<span class="vacChipMore">+'+(vac.length-8)+' more</span>':'')+'</div>':'';
+
+  var occCard='<div class="card"><div class="cardHead"><span class="cardTitle">Occupancy</span>'+
+    '<button class="link" onclick="go(\'properties\')">View rooms ›</button></div>'+
+    '<div class="occRow">'+ring(occRate)+'<div style="flex:1">'+
+      '<div class="occLine"><span class="dot occ"></span> <b style="color:var(--ink)">'+occ.length+'</b>&nbsp;occupied</div>'+
+      '<div class="occLine"><span class="dot vac"></span> <b style="color:var(--ink)">'+vac.length+'</b>&nbsp;vacant</div>'+
+      '<div class="occBarTrack"><div class="occBarFill" style="width:'+occRate+'%"></div></div>'+
+    '</div></div>'+vacChips+'</div>';
+
+  var collectCard='<div class="card"><div class="cardHead"><span class="cardTitle">Rent collection</span><span class="pctTag">'+collected+'%</span></div>'+
+    '<div class="occBarTrack" style="height:10px;margin:8px 0 14px"><div class="occBarFill" style="width:'+Math.min(collected,100)+'%"></div></div>'+
+    '<div class="collectRow"><div><div class="miniLbl">Collected</div><div class="miniVal">'+RM(s.mi)+'</div></div>'+
+    '<div><div class="miniLbl">Outstanding</div><div class="miniVal" style="color:var(--expense)">'+RM(Math.max(s.expected-s.mi,0))+'</div></div></div></div>';
+
+  var lateCount=due.filter(function(d){return d.late;}).length;
+  var dueCard='<div class="card full-col"><div class="cardHead"><span class="cardTitle">Outstanding rent · '+MONTHS[s.m]+'</span>'+
+    '<button class="link" onclick="go(\'rent\')">Go to rent ›</button></div>'+
+    (due.length===0?'<div class="empty">✓ Everyone has paid for this month. Nice.</div>':
+      '<div class="dueGrid">'+due.map(function(d){
+        var badge=d.late?'<span class="lateBadge">Late</span>':'';
+        var owed=d.monthsOwed>1?'<div class="owedTag">'+d.monthsOwed+' months · '+RM(d.amountOwed)+' owed</div>':'';
+        return '<div class="dueItem'+(d.late?' late':'')+'"><div><div class="dueName">'+esc(d.tenant.name)+badge+'</div><div class="dueRoom">'+esc(d.room.propName)+' · '+esc(d.room.label)+'</div>'+owed+'</div>'+
+        '<div class="dueRight"><span class="dueAmt">'+RM(d.room.rent)+'</span><button class="btn-mini" onclick="openPayment(\''+d.tenant.id+'\')">Record</button></div></div>';
+      }).join("")+'</div>')+'</div>';
+
+  return '<div class="page">'+
+    pageHead("Overview",MONTHS[s.m]+" "+s.y+" · "+DB.Properties.length+" houses · "+all.length+" rooms",
+      '<button class="btn-primary" onclick="openNewTenant()">+ New tenant</button>')+
+    ledger+'<div class="dashGrid">'+occCard+collectCard+dueCard+'</div></div>';
+}
+
+function ledgerCell(label,value,trend,color,big){
+  return '<div class="ledgerCell"><div class="ledgerLbl">'+label+'</div>'+
+    '<div class="ledgerVal'+(big?' big':'')+'" style="color:'+color+'">'+value+'</div>'+
+    (trend?'<div class="ledgerTrend">'+trend+'</div>':'')+'</div>';
+}
+function ring(pct){
+  var r=34,c=2*Math.PI*r,off=c-(c*pct/100);
+  return '<svg class="ring" width="88" height="88" style="flex-shrink:0">'+
+    '<circle cx="44" cy="44" r="'+r+'" fill="none" stroke="var(--line)" stroke-width="9"/>'+
+    '<circle cx="44" cy="44" r="'+r+'" fill="none" stroke="var(--accent)" stroke-width="9" stroke-dasharray="'+c+'" stroke-dashoffset="'+off+'" stroke-linecap="round" transform="rotate(-90 44 44)"/>'+
+    '<text x="44" y="49" text-anchor="middle" font-size="19" font-weight="700" fill="var(--ink)">'+pct+'%</text></svg>';
+}
+
+// ---------- Properties ----------
+function viewProperties(){
+  if(openProp===null && DB.Properties[0]) openProp=DB.Properties[0].id;
+  var list=DB.Properties.map(function(p){
+    var prooms=DB.Rooms.filter(function(r){return r.propId===p.id;});
+    var occ=prooms.filter(function(r){return r.tenantId;}).length;
+    var rev=prooms.filter(function(r){return r.tenantId;}).reduce(function(s,r){return s+(+r.rent);},0);
+    var isOpen=openProp===p.id;
+    var rules = "<span style='font-size:12px;color:var(--ink-faint);margin-left:8px'>Due: "+(p.dueDay||1)+"<sup>"+(["st","nd","rd"][((p.dueDay||1)-1)%10]||"th")+"</sup>"+
+      " · Deposit: "+(p.depositRule||2)+"× rent</span>";
+    var roomCards=prooms.map(function(r){
+      var t=r.tenantId?tenantById(r.tenantId):null;
+      if(editRoomId===r.id){
+        return '<div class="roomCard'+(t?' occ':'')+'"><div class="roomTop"><span class="roomLabel">'+esc(r.label)+'</span></div>'+
+          '<input class="inp" id="er_label" value="'+esc(r.label)+'" style="margin-bottom:8px" placeholder="Room label">'+
+          '<input class="inp" id="er_rent" type="number" value="'+r.rent+'" style="margin-bottom:8px" placeholder="Rent">'+
+          '<div style="display:flex;gap:6px"><button class="btn-mini" onclick="saveRoomEdit(\''+p.id+'\',\''+r.id+'\')">Save</button>'+
+          '<button class="btn-ghost-mini" onclick="editRoomId=null;render()">Cancel</button></div></div>';
+      }
+      return '<div class="roomCard'+(t?' occ':'')+'">'+
+        '<div class="roomTop"><span class="roomLabel">'+esc(r.label)+'</span>'+
+        '<span class="roomStatus '+(t?'occ':'vac')+'">'+(t?'Occupied':'Vacant')+'</span></div>'+
+        '<div class="roomTenant">'+(t?esc(t.name):'<span class="none">No tenant</span>')+'</div>'+
+        '<div class="roomBottom"><span class="roomRent">'+RM(r.rent)+'</span><div style="display:flex;gap:4px">'+
+        '<button class="icon-btn" onclick="editRoomId=\''+r.id+'\';render()">✎</button>'+
+        (t?'':'<button class="icon-btn" onclick="delRoom(\''+r.id+'\')">🗑</button>')+'</div></div></div>';
+    }).join("");
+    return '<div class="card propCard">'+
+      '<button class="propHead" onclick="toggleProp(\''+p.id+'\')">'+
+        '<div class="propHeadL"><div class="propIcon">'+icon("properties")+'</div>'+
+        '<div><div class="propName">'+esc(p.name)+rules+'</div><div class="propMeta">'+prooms.length+' rooms · '+occ+' occupied · '+(prooms.length-occ)+' vacant</div></div></div>'+
+        '<div class="propHeadR"><span class="propRevenue">'+RM(rev)+'/mo</span><span class="chev" style="transform:'+(isOpen?'rotate(90deg)':'none')+'">›</span></div>'+
+      '</button>'+
+      (isOpen?'<div class="roomWrap"><div class="roomGrid">'+roomCards+
+        '<button class="addRoomCard" onclick="openAddRoom(\''+p.id+'\')"><span style="font-size:22px">+</span><span>Add room</span></button>'+
+        '<button class="btn-ghost-mini" style="margin-top:8px" onclick="openEditProperty(\''+p.id+'\')">Edit house rules</button>'+
+        '</div></div>':'')+'</div>';
+  }).join("");
+  return '<div class="page">'+
+    pageHead("Houses & Rooms","Manage your buildings, rooms and rent amounts",
+      '<button class="btn-primary" onclick="openAddProperty()">+ Add house</button>')+
+    '<div class="propList">'+list+'</div></div>';
+}
+function toggleProp(id){ openProp = openProp===id?null:id; editRoomId=null; render(); }
+
+function openEditProperty(propId){
+  var p = DB.Properties.find(function(x){return x.id===propId;});
+  modal('<h3 class="modalTitle">Edit house rules</h3>'+
+    '<p class="modalSub">'+esc(p.name)+'</p>'+
+    fld("Rent due on day of month",'<input class="inp" id="ep_dueDay" type="number" min="1" max="28" value="'+(p.dueDay||1)+'">')+
+    fld("Deposit (× monthly rent)",'<input class="inp" id="ep_depRule" type="number" step="0.5" value="'+(p.depositRule||2)+'">')+
+    '<button class="btn-primary full" onclick="doEditProperty(\''+propId+'\')">Save</button>');
+}
+async function doEditProperty(propId){
+  var p = DB.Properties.find(function(x){return x.id===propId;});
+  p.dueDay = Number(el("ep_dueDay").value);
+  p.depositRule = Number(el("ep_depRule").value);
+  closeModal(); render();
+  await updateRow("Properties", p);
+}
+
+// ---------- Tenants ----------
+function viewTenants(){
+  var active=DB.Tenants.filter(function(t){return t.active!==false;});
+  var past=DB.Tenants.filter(function(t){return t.active===false;});
+  var q=tenantQuery.toLowerCase();
+  var filt=function(list){return list.filter(function(t){return t.name.toLowerCase().indexOf(q)>=0 || String(t.phone||"").indexOf(tenantQuery)>=0;});};
+  var cols="1.6fr 1.4fr .8fr 1fr 1.2fr auto";
+  var dueByTenant={}; dueList().forEach(function(d){ dueByTenant[d.tenant.id]=d; });
+  var rowsHtml=filt(active).map(function(t){
+    var room=roomById(t.roomId);
+    var d=dueByTenant[t.id];
+    var lateBadge=(d&&d.late)?'<span class="lateBadge">Late</span>':'';
+    var remind=(d&&t.phone)?'<button class="btn-ghost-mini" onclick="openRemind(\''+t.id+'\')">Remind</button>':'';
+    return '<div class="trow" style="grid-template-columns:'+cols+'">'+
+      '<div><div class="tName">'+esc(t.name)+lateBadge+'</div><div class="tPhone">'+esc(t.phone)+'</div></div>'+
+      '<span class="tCell">'+(room?esc(room.propName)+' · '+esc(room.label):'—')+'</span>'+
+      '<span class="tCell">'+RM(t.rent)+'</span>'+
+      '<span class="tCell">'+esc(t.moveIn)+'</span>'+
+      '<button class="link" onclick="openAgreement(\''+t.id+'\')">📄 '+esc(t.agreementNo)+'</button>'+
+      '<div class="tEnd">'+remind+'<button class="btn-mini" onclick="openPayment(\''+t.id+'\')">Receipt</button>'+
+      '<button class="btn-ghost-mini" onclick="moveOut(\''+t.id+'\')">Move out</button></div></div>';
+  }).join("");
+  var pastHtml=filt(past).length?'<div class="subHead">Past tenants</div><div class="tbl">'+
+    filt(past).map(function(t){return '<div class="trow" style="grid-template-columns:'+cols+';opacity:.6">'+
+      '<div><div class="tName">'+esc(t.name)+'</div><div class="tPhone">'+esc(t.phone)+'</div></div>'+
+      '<span class="tCell">—</span><span class="tCell">'+RM(t.rent)+'</span><span class="tCell">'+esc(t.moveIn)+'</span>'+
+      '<span class="tCell">Moved out '+esc(t.movedOut)+'</span><span></span></div>';}).join("")+'</div>':'';
+  return '<div class="page">'+
+    pageHead("Tenants",active.length+" active · "+past.length+" past",
+      '<button class="btn-primary" onclick="openNewTenant()">+ New tenant</button>')+
+    '<div class="searchBar">🔍<input placeholder="Search by name or phone…" value="'+esc(tenantQuery)+'" oninput="tenantQuery=this.value;render();requeryFocus()" id="tq"></div>'+
+    '<div class="tbl"><div class="thead" style="grid-template-columns:'+cols+'"><span>Tenant</span><span>Room</span><span>Rent</span><span>Move-in</span><span>Agreement</span><span></span></div>'+
+    (rowsHtml||'<div class="empty">No tenants yet. Add your first one.</div>')+'</div>'+pastHtml+'</div>';
+}
+function requeryFocus(){var i=el("tq"); if(i){i.focus();i.setSelectionRange(i.value.length,i.value.length);}}
+
+// ---------- Rent ----------
+function viewRent(){
+  var due=dueList(), s=sums();
+  var lateOnes=due.filter(function(d){return d.late;});
+  var withPhone=lateOnes.filter(function(d){return d.tenant.phone;});
+
+  var dueBanner=due.length?'<div class="dueBanner">⚠ <b>&nbsp;'+due.length+'</b>&nbsp;tenant'+(due.length>1?'s':'')+' owe rent'+
+    (lateOnes.length?' · <b>&nbsp;'+lateOnes.length+'</b>&nbsp;late':'')+
+    '<div style="flex:1"></div>'+
+    (withPhone.length?'<button class="btn-mini" style="background:#25D366" onclick="openRemindAll()">Remind '+withPhone.length+' on WhatsApp</button>':'')+
+    '</div>':'';
+
+  var dueCards=due.length?'<div class="dueGrid">'+due.map(function(d){
+    var badge=d.late?'<span class="lateBadge">Late</span>':'';
+    var owed=d.monthsOwed>1?'<div class="owedTag">'+d.monthsOwed+' months · '+RM(d.amountOwed)+' owed</div>':'';
+    var remindBtn=d.tenant.phone?'<button class="btn-ghost-mini" onclick="openRemind(\''+d.tenant.id+'\')">Remind</button>':'';
+    return '<div class="dueItem'+(d.late?' late':'')+'"><div><div class="dueName">'+esc(d.tenant.name)+badge+'</div><div class="dueRoom">'+esc(d.room.propName)+' · '+esc(d.room.label)+'</div>'+owed+'</div>'+
+    '<div class="dueRight"><span class="dueAmt">'+RM(d.room.rent)+'</span>'+remindBtn+'<button class="btn-mini" onclick="openPayment(\''+d.tenant.id+'\')">Record</button></div></div>';
+  }).join("")+'</div>':'';
+
+  var visible=DB.Payments.filter(function(p){ if(rentFilter==="all")return true; var r=roomById(p.roomId); return r&&r.propId===rentFilter; });
+  var cols="1.2fr 1.2fr .8fr 1fr 1fr auto";
+  var hist=visible.map(function(p){
+    var t=tenantById(p.tenantId);
+    return '<div class="trow" style="grid-template-columns:'+cols+'">'+
+      '<span class="receiptNo">'+esc(p.receiptNo)+'</span>'+
+      '<span class="tCell">'+esc(t?t.name:(p.tenantName||"—"))+'</span>'+
+      '<span class="green">'+RM(p.amount)+'</span>'+
+      '<span class="tCell">'+MONTHS[p.forMonth]+' '+p.forYear+'</span>'+
+      '<span class="tCell">'+esc(p.date)+'</span>'+
+      '<div class="tEnd"><button class="btn-mini" onclick="openReceipt(\''+p.id+'\')">View</button>'+
+      '<button class="icon-btn" onclick="delPayment(\''+p.id+'\')">🗑</button></div></div>';
+  }).join("");
+  var opts='<option value="all">All houses</option>'+DB.Properties.map(function(p){return '<option value="'+p.id+'"'+(rentFilter===p.id?' selected':'')+'>'+esc(p.name)+'</option>';}).join("");
+  return '<div class="page">'+
+    pageHead("Rent & Receipts","Record payments and issue receipts automatically",
+      '<button class="btn-ghost" onclick="openRentSettings()">⚙ Reminder & Email settings</button>')+
+    dueBanner+dueCards+
+    '<div class="cardHead" style="margin-top:28px"><span class="cardTitle">Payment history</span>'+
+    '<select class="select" style="width:auto" onchange="rentFilter=this.value;render()">'+opts+'</select></div>'+
+    '<div class="tbl"><div class="thead" style="grid-template-columns:'+cols+'"><span>Receipt</span><span>Tenant</span><span>Amount</span><span>For</span><span>Paid on</span><span></span></div>'+
+    (hist||'<div class="empty">No payments recorded yet.</div>')+'</div></div>';
+}
+
+// ---------- WhatsApp reminders ----------
+function reminderTemplate(){
+  return localStorage.getItem("rumah_wa_tpl") ||
+    "Hi {name}, a friendly reminder that your rent for {period} ({house}, room {room}) of {amount} is now due. Kindly arrange payment when you can. Thank you! — {landlord}";
+}
+function landlordName(){ return localStorage.getItem("rumah_landlord") || "Management"; }
+
+function periodLabel(d){
+  var list=d.overdueMonths.slice();
+  if(d.owesCurrent){ var n=new Date(); list.push({y:n.getFullYear(),m:n.getMonth()}); }
+  if(!list.length) return MONTHS[new Date().getMonth()]+" "+new Date().getFullYear();
+  if(list.length===1) return MONTHS[list[0].m]+" "+list[0].y;
+  var first=list[0], last=list[list.length-1];
+  return MONTHS[first.m]+" "+first.y+"–"+MONTHS[last.m]+" "+last.y+" ("+list.length+" months)";
+}
+function buildMessage(d){
+  return reminderTemplate()
+    .replace(/{name}/g, d.tenant.name)
+    .replace(/{house}/g, d.room.propName)
+    .replace(/{room}/g, d.room.label)
+    .replace(/{amount}/g, RM(d.amountOwed))
+    .replace(/{months}/g, d.monthsOwed)
+    .replace(/{period}/g, periodLabel(d))
+    .replace(/{landlord}/g, landlordName());
+}
+function waNumber(phone){
+  var n=String(phone||"").replace(/[^0-9]/g,"");
+  if(!n) return "";
+  if(n.charAt(0)==="0") n="60"+n.slice(1);
+  else if(n.slice(0,2)!=="60" && n.length<=10) n="60"+n;
+  return n;
+}
+function waLink(phone,msg){
+  var num=waNumber(phone);
+  return "https://wa.me/"+num+"?text="+encodeURIComponent(msg);
+}
+
+function openRemind(tenantId){
+  var d=dueList().find(function(x){return x.tenant.id===tenantId;});
+  if(!d){ modal('<h3 class="modalTitle">Nothing due</h3><div class="empty">This tenant has no outstanding rent.</div>'); return; }
+  var msg=buildMessage(d);
+  var hasPhone=!!d.tenant.phone;
+  modal('<h3 class="modalTitle">WhatsApp reminder</h3>'+
+    '<p class="modalSub">'+esc(d.tenant.name)+' · '+esc(d.tenant.phone||"no phone on file")+(d.late?' · <b style="color:var(--expense)">Late</b>':'')+'</p>'+
+    '<div class="waPreview" id="wa_msg" contenteditable="true" oninput="syncWaLink(\''+esc(d.tenant.phone)+'\')">'+esc(msg)+'</div>'+
+    '<div class="waActions">'+
+      '<button class="btn-ghost" onclick="copyWa(event)">Copy text</button>'+
+      (hasPhone
+        ? '<a class="btn-wa" id="wa_link" href="'+waLink(d.tenant.phone,msg)+'" target="_blank" rel="noopener" onclick="syncWaLink(\''+esc(d.tenant.phone)+'\')">Open in WhatsApp</a>'
+        : '<span class="btn-wa disabled">No phone number</span>')+
+    '</div>'+
+    '<p class="modalSub" style="margin-top:14px;font-size:11.5px">You can edit the message above before sending. WhatsApp opens with it pre-filled — you tap send.</p>');
+}
+function syncWaLink(phone){
+  var box=el("wa_msg"), link=el("wa_link");
+  if(box&&link) link.href=waLink(phone, box.innerText);
+}
+function copyWa(ev){
+  var box=el("wa_msg"); if(!box) return;
+  navigator.clipboard.writeText(box.innerText).then(function(){
+    var b=ev.target; var old=b.textContent; b.textContent="Copied ✓";
+    setTimeout(function(){b.textContent=old;},1400);
+  });
+}
+
+function openRemindAll(){
+  var late=dueList().filter(function(d){return d.late && d.tenant.phone;});
+  if(!late.length){ modal('<h3 class="modalTitle">No reminders to send</h3><div class="empty">No late tenants have a phone number on file.</div>'); return; }
+  var rowsHtml=late.map(function(d){
+    return '<div class="dueItem" style="margin-bottom:8px"><div><div class="dueName">'+esc(d.tenant.name)+'<span class="lateBadge">Late</span></div>'+
+      '<div class="dueRoom">'+esc(d.room.propName)+' · '+esc(d.room.label)+' · owes '+RM(d.amountOwed)+'</div></div>'+
+      '<div class="dueRight">'+
+        '<button class="btn-ghost-mini" onclick="openRemind(\''+d.tenant.id+'\')">Preview</button>'+
+        '<a class="btn-wa" style="flex:none;padding:8px 14px" href="'+waLink(d.tenant.phone,buildMessage(d))+'" target="_blank" rel="noopener">Send</a>'+
+      '</div></div>';
+  }).join("");
+  modal('<h3 class="modalTitle">Remind late tenants</h3>'+
+    '<p class="modalSub">'+late.length+' late tenant'+(late.length>1?'s':'')+' with a phone number. Each opens its own WhatsApp chat — tap Send, then come back for the next.</p>'+
+    rowsHtml+
+    '<button class="btn-ghost full" onclick="closeModal()">Done</button>');
+}
+
+function openRentSettings(){
+  var email = DB.Config.landlordEmail || "";
+  modal('<h3 class="modalTitle">Reminder & Email settings</h3>'+
+    '<p class="modalSub">Controls WhatsApp messages and monthly summary emails.</p>'+
+    '<div class="field" style="margin-bottom:14px"><span class="fieldLbl">Landlord email (for monthly report)</span>'+
+      '<input class="inp" id="set_email" value="'+esc(email)+'" placeholder="you@example.com"></div>'+
+    '<div class="field" style="margin-bottom:14px"><span class="fieldLbl">Your name / business</span>'+
+      '<input class="inp" id="set_landlord" value="'+esc(landlordName())+'" placeholder="CasaMawar Management"></div>'+
+    '<div class="field" style="margin-bottom:6px"><span class="fieldLbl">WhatsApp message template</span>'+
+      '<textarea class="inp" id="set_tpl" rows="5" style="resize:vertical;font-family:var(--body)">'+esc(reminderTemplate())+'</textarea></div>'+
+    '<p class="modalSub" style="font-size:11.5px;margin-top:8px">Tags you can use: {name} {house} {room} {amount} {months} {period} {landlord}</p>'+
+    '<div class="waActions">'+
+      '<button class="btn-ghost" onclick="resetTpl()">Reset text</button>'+
+      '<button class="btn-primary" style="flex:1" onclick="saveRentSettings()">Save</button>'+
+    '</div>');
+}
+function saveRentSettings(){
+  var email = el("set_email").value.trim();
+  localStorage.setItem("rumah_landlord", el("set_landlord").value.trim()||"Management");
+  localStorage.setItem("rumah_wa_tpl", el("set_tpl").value.trim()||reminderTemplate());
+  closeModal();
+  setAppConfig("landlordEmail", email).then(function(){
+    DB.Config.landlordEmail = email;
+    render();
+  });
+}
+function resetTpl(){
+  localStorage.removeItem("rumah_wa_tpl");
+  el("set_tpl").value=reminderTemplate();
+}
+
+// ---------- Expenses ----------
+function viewExpenses(){
+  var cats=["Maintenance","Utilities","Repairs","Cleaning","Tax & Insurance","Other"];
+  var total=DB.Expenses.reduce(function(s,e){return s+(+e.amount);},0);
+  var propOpts='<option value="">General / all</option>'+DB.Properties.map(function(p){return '<option value="'+p.id+'">'+esc(p.name)+'</option>';}).join("");
+  var catOpts=cats.map(function(c){return '<option>'+c+'</option>';}).join("");
+  var cols="1fr 1.2fr 1.2fr 2fr 1fr auto";
+  var rowsHtml=DB.Expenses.map(function(e){
+    var prop=DB.Properties.find(function(p){return p.id===e.propId;});
+    return '<div class="trow" style="grid-template-columns:'+cols+'">'+
+      '<span class="tCell">'+esc(e.date)+'</span><span><span class="catTag">'+esc(e.category)+'</span></span>'+
+      '<span class="tCell">'+(prop?esc(prop.name):'General')+'</span><span class="tCell">'+esc(e.desc)+'</span>'+
+      '<span class="red">'+RM(e.amount)+'</span>'+
+      '<button class="icon-btn" onclick="delExpense(\''+e.id+'\')">🗑</button></div>';
+  }).join("");
+  return '<div class="page">'+
+    pageHead("Expenses",DB.Expenses.length+" entries · "+RM(total)+" total recorded","")+
+    '<div class="card" style="margin-bottom:22px"><div class="expForm">'+
+      '<input class="inp" id="ex_date" type="date" value="'+todayISO()+'">'+
+      '<select class="inp" id="ex_cat">'+catOpts+'</select>'+
+      '<select class="inp" id="ex_prop">'+propOpts+'</select>'+
+      '<input class="inp" id="ex_desc" placeholder="Description">'+
+      '<input class="inp" id="ex_amt" type="number" placeholder="Amount (RM)">'+
+      '<button class="btn-primary" onclick="addExpense()">+ Add</button>'+
+    '</div></div>'+
+    '<div class="tbl"><div class="thead" style="grid-template-columns:'+cols+'"><span>Date</span><span>Category</span><span>House</span><span>Description</span><span>Amount</span><span></span></div>'+
+    (rowsHtml||'<div class="empty">No expenses recorded.</div>')+'</div></div>';
+}
+
+// ---------- Reports ----------
+function viewReports(){
+  var yearsSet={}; DB.Payments.forEach(function(p){yearsSet[p.forYear]=1;}); DB.Expenses.forEach(function(e){yearsSet[new Date(e.date).getFullYear()]=1;}); yearsSet[new Date().getFullYear()]=1;
+  var years=Object.keys(yearsSet).map(Number).sort(function(a,b){return b-a;});
+  var monthly=MONTHS.map(function(m,i){
+    var inc=DB.Payments.filter(function(p){return p.forYear===reportYear&&p.forMonth===i;}).reduce(function(s,p){return s+(+p.amount);},0);
+    var exp=DB.Expenses.filter(function(e){var d=new Date(e.date);return d.getFullYear()===reportYear&&d.getMonth()===i;}).reduce(function(s,e){return s+(+e.amount);},0);
+    return {m:m,inc:inc,exp:exp};
+  });
+  var maxVal=Math.max.apply(null,monthly.map(function(x){return Math.max(x.inc,x.exp);}).concat([1]));
+  var totalInc=monthly.reduce(function(s,x){return s+x.inc;},0), totalExp=monthly.reduce(function(s,x){return s+x.exp;},0);
+  var bars=monthly.map(function(x){
+    return '<div class="chartCol"><div class="chartBars">'+
+      '<div class="barInc" style="height:'+(x.inc/maxVal*100)+'%" title="Income '+RM(x.inc)+'"></div>'+
+      '<div class="barExp" style="height:'+(x.exp/maxVal*100)+'%" title="Expense '+RM(x.exp)+'"></div>'+
+      '</div><span class="chartLbl">'+x.m+'</span></div>';
+  }).join("");
+  var byProp=DB.Properties.map(function(p){
+    var rids={}; DB.Rooms.filter(function(r){return r.propId===p.id;}).forEach(function(r){rids[r.id]=1;});
+    var inc=DB.Payments.filter(function(pm){return pm.forYear===reportYear&&rids[pm.roomId];}).reduce(function(s,pm){return s+(+pm.amount);},0);
+    var exp=DB.Expenses.filter(function(e){return e.propId===p.id&&new Date(e.date).getFullYear()===reportYear;}).reduce(function(s,e){return s+(+e.amount);},0);
+    var rc=DB.Rooms.filter(function(r){return r.propId===p.id;}).length;
+    return '<div class="trow" style="grid-template-columns:2fr 1fr 1fr 1fr 1fr"><span class="tName">'+esc(p.name)+'</span>'+
+      '<span class="tCell">'+rc+'</span><span class="green">'+RM(inc)+'</span><span class="red">'+RM(exp)+'</span>'+
+      '<span class="tCell" style="font-weight:600;color:var(--ink)">'+RM(inc-exp)+'</span></div>';
+  }).join("");
+  var yearOpts=years.map(function(y){return '<option value="'+y+'"'+(y===reportYear?' selected':'')+'>'+y+'</option>';}).join("");
+  return '<div class="page">'+
+    pageHead("Reports","Yearly and monthly income vs expenses",
+      '<select class="select" style="width:auto" onchange="reportYear=Number(this.value);render()">'+yearOpts+'</select>'+
+      '<button class="btn-ghost" onclick="exportCSV()">⬇ Export CSV</button>')+
+    '<div class="ledgerStrip">'+
+      ledgerCell("Total income "+reportYear,RM(totalInc),"","var(--income)",true)+'<div class="ledgerDiv"></div>'+
+      ledgerCell("Total expenses",RM(totalExp),"","var(--expense)")+'<div class="ledgerDiv"></div>'+
+      ledgerCell("Net profit",RM(totalInc-totalExp),"",(totalInc-totalExp)>=0?"var(--income)":"var(--expense)")+
+    '</div>'+
+    '<div class="card" style="margin-top:22px"><div class="cardTitle">Monthly breakdown</div>'+
+      '<div class="chart">'+bars+'</div>'+
+      '<div class="legend"><span class="legItem"><span class="legDot" style="background:var(--income)"></span> Income</span>'+
+      '<span class="legItem"><span class="legDot" style="background:var(--expense)"></span> Expense</span></div></div>'+
+    '<div class="card" style="margin-top:22px"><div class="cardTitle">By house</div>'+
+      '<div class="tbl" style="margin-top:14px"><div class="thead" style="grid-template-columns:2fr 1fr 1fr 1fr 1fr"><span>House</span><span>Rooms</span><span>Income</span><span>Expense</span><span>Net</span></div>'+byProp+'</div></div>'+
+    '</div>';
+}
+function exportCSV(){
+  var monthly=MONTHS.map(function(m,i){
+    var inc=DB.Payments.filter(function(p){return p.forYear===reportYear&&p.forMonth===i;}).reduce(function(s,p){return s+(+p.amount);},0);
+    var exp=DB.Expenses.filter(function(e){var d=new Date(e.date);return d.getFullYear()===reportYear&&d.getMonth()===i;}).reduce(function(s,e){return s+(+e.amount);},0);
+    return {m:m,inc:inc,exp:exp};
+  });
+  var csv="Month,Income,Expense,Net\n";
+  var ti=0,te=0;
+  monthly.forEach(function(x){csv+=x.m+" "+reportYear+","+x.inc+","+x.exp+","+(x.inc-x.exp)+"\n";ti+=x.inc;te+=x.exp;});
+  csv+="\nTotal,"+ti+","+te+","+(ti-te)+"\n";
+  var a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));
+  a.download="report-"+reportYear+".csv"; a.click();
+}
+
+// ============================================================
+//  MODALS
+// ============================================================
+function modal(html){
+  var m=document.createElement("div");
+  m.className="overlay"; m.id="overlay";
+  m.onclick=function(e){ if(e.target===m) closeModal(); };
+  m.innerHTML='<div class="modal"><button class="modalClose" onclick="closeModal()">×</button>'+html+'</div>';
+  document.body.appendChild(m);
+}
+function closeModal(){ var o=el("overlay"); if(o) o.remove(); }
+
+function fld(label,inner){ return '<label class="field"><span class="fieldLbl">'+label+'</span>'+inner+'</label>'; }
+function term(k,v){ return '<div class="term"><span class="k">'+k+'</span><span class="v">'+v+'</span></div>'; }
+
+// add property
+function openAddProperty(){
+  modal('<h3 class="modalTitle">Add a house</h3>'+
+    fld("House name",'<input class="inp" id="ap_name" placeholder="e.g. CasaMelati" autofocus>')+
+    '<div style="height:13px"></div>'+
+    fld("Address (optional)",'<input class="inp" id="ap_addr" placeholder="Street, city">')+
+    '<button class="btn-primary full" onclick="doAddProperty()">Create house</button>');
+}
+async function doAddProperty(){
+  var name=el("ap_name").value.trim(); if(!name) return;
+  var row={id:uid(),name:name,address:el("ap_addr").value.trim(), dueDay:1, depositRule:2};
+  DB.Properties.push(row); openProp=row.id; closeModal(); render();
+  await insertRow("Properties",row);
+}
+
+// add room
+function openAddRoom(propId){
+  var p=DB.Properties.find(function(x){return x.id===propId;});
+  modal('<h3 class="modalTitle">Add room to '+esc(p.name)+'</h3>'+
+    fld("Room label",'<input class="inp" id="ar_label" placeholder="e.g. A-12" autofocus>')+
+    '<div style="height:13px"></div>'+
+    fld("Monthly rent (RM)",'<input class="inp" id="ar_rent" type="number" placeholder="450">')+
+    '<button class="btn-primary full" onclick="doAddRoom(\''+propId+'\')">Add room</button>');
+}
+async function doAddRoom(propId){
+  var label=el("ar_label").value.trim(), rent=Number(el("ar_rent").value);
+  if(!label||!rent) return;
+  var row={id:uid(),propId:propId,label:label,rent:rent,tenantId:""};
+  DB.Rooms.push(row); closeModal(); render();
+  await insertRow("Rooms",row);
+}
+async function saveRoomEdit(propId,roomId){
+  var label=el("er_label").value.trim(), rent=Number(el("er_rent").value);
+  var r=DB.Rooms.find(function(x){return x.id===roomId;});
+  r.label=label; r.rent=rent; editRoomId=null; render();
+  await updateRow("Rooms",r);
+}
+async function delRoom(roomId){
+  if(!confirm("Delete this room?")) return;
+  DB.Rooms=DB.Rooms.filter(function(r){return r.id!==roomId;}); render();
+  await deleteRow("Rooms",roomId);
+}
+
+// new tenant
+function openNewTenant(){
+  var vac=vacantRooms();
+  if(!vac.length){ modal('<h3 class="modalTitle">New tenant</h3><div class="empty">No vacant rooms. Add a room or free one up first.</div>'); return; }
+  var roomOpts=vac.map(function(r){
+    return '<option value="'+r.id+'" data-rent="'+r.rent+'" data-prop="'+r.propId+'">'+esc(r.propName)+' · '+esc(r.label)+' ('+RM(r.rent)+')</option>';
+  }).join("");
+  modal('<h3 class="modalTitle">New tenant</h3>'+
+    '<p class="modalSub">An agreement and welcome receipt are generated automatically.</p>'+
+    '<div class="formGrid">'+
+      fld("Full name",'<input class="inp" id="nt_name" autofocus>')+
+      fld("Phone",'<input class="inp" id="nt_phone">')+
+      fld("IC / Passport",'<input class="inp" id="nt_ic">')+
+      fld("Email",'<input class="inp" id="nt_email">')+
+      fld("Room",'<select class="inp" id="nt_room" onchange="ntSync()">'+roomOpts+'</select>')+
+      fld("Move-in date",'<input class="inp" id="nt_movein" type="date" value="'+todayISO()+'">')+
+      fld("Monthly rent (RM)",'<input class="inp" id="nt_rent" type="number" value="'+vac[0].rent+'">')+
+      fld("Deposit (RM)",'<input class="inp" id="nt_deposit" type="number" placeholder="'+(vac[0].rent*2)+'">')+
+      fld("Agreement (months)",'<input class="inp" id="nt_dur" type="number" value="12">')+
+    '</div>'+
+    '<button class="btn-primary full" onclick="doNewTenant()">Create tenant & generate agreement</button>');
+}
+function ntSync(){
+  var sel=el("nt_room");
+  var rent = sel.options[sel.selectedIndex].getAttribute("data-rent");
+  var propId = sel.options[sel.selectedIndex].getAttribute("data-prop");
+  el("nt_rent").value = rent;
+  var prop = DB.Properties.find(function(p){ return p.id===propId; });
+  var mult = prop ? depositMultiplier(prop) : 2;
+  el("nt_deposit").placeholder = rent * mult;
+}
+async function doNewTenant(){
+  var name=el("nt_name").value.trim(), roomId=el("nt_room").value;
+  if(!name||!roomId) return;
+  var rent=Number(el("nt_rent").value);
+  var t={id:uid(),name:name,phone:el("nt_phone").value.trim(),ic:el("nt_ic").value.trim(),
+    email:el("nt_email").value.trim(),roomId:roomId,moveIn:el("nt_movein").value,
+    rent:rent,deposit:Number(el("nt_deposit").value)||rent*2,duration:Number(el("nt_dur").value)||12,
+    agreementNo:"AG-"+uid().toUpperCase().slice(0,6),createdAt:todayISO(),active:true,movedOut:""};
+  DB.Tenants.push(t);
+  var room=DB.Rooms.find(function(r){return r.id===roomId;});
+  room.tenantId=t.id; room.rent=rent;
+  closeModal();
+  await insertRow("Tenants",t);
+  await updateRow("Rooms",room);
+  openAgreement(t.id);
+}
+
+// agreement
+function openAgreement(tenantId){
+  var t=tenantById(tenantId); var room=roomById(t.roomId);
+  var prop=DB.Properties.find(function(p){return DB.Rooms.some(function(r){return r.id===t.roomId&&r.propId===p.id;});});
+  var end=(function(){var d=new Date(t.moveIn); d.setMonth(d.getMonth()+Number(t.duration||12)); return d.toISOString().slice(0,10);})();
+  modal('<div class="docHead"><h3 class="modalTitle">Tenancy agreement</h3><button class="btn-ghost" onclick="window.print()">⬇ Print / Save PDF</button></div>'+
+    '<div id="printable" class="doc">'+
+      '<div class="docTop"><div><div class="docBrand">TENANCY AGREEMENT</div><div class="docNo">'+esc(t.agreementNo)+'</div></div><div class="docDate">Dated '+esc(t.createdAt)+'</div></div>'+
+      '<p class="docPara">This agreement is made between the <b>Landlord</b> and the <b>Tenant</b> named below for the rental of the room described herein, subject to the terms and conditions set out.</p>'+
+      '<div class="docCols"><div><div class="docLbl">TENANT</div><div class="docVal">'+esc(t.name)+'</div>'+
+        '<div class="docMini">IC/Passport: '+esc(t.ic||"—")+'</div><div class="docMini">Phone: '+esc(t.phone||"—")+'</div><div class="docMini">Email: '+esc(t.email||"—")+'</div></div>'+
+        '<div><div class="docLbl">PREMISES</div><div class="docVal">'+esc(prop?prop.name:"")+' — Room '+esc(room?room.label:"")+'</div><div class="docMini">'+esc(prop&&prop.address?prop.address:"Address on file")+'</div></div></div>'+
+      '<div class="docTerms">'+term("Monthly rent",RM(t.rent))+term("Security deposit",RM(t.deposit))+term("Tenancy start",esc(t.moveIn))+term("Tenancy end",end)+term("Duration",t.duration+" months")+term("Rent due","1st of each month")+'</div>'+
+      '<div class="docClause"><b>1. Rent.</b> The Tenant shall pay the monthly rent on or before the due date each month.<br><b>2. Deposit.</b> The deposit is refundable on move-out, less any damages or arrears.<br><b>3. Use.</b> The premises shall be used for residential purposes only.<br><b>4. Termination.</b> Either party may terminate with one month written notice.<br><b>5. Maintenance.</b> The Tenant shall keep the premises clean and report damages promptly.</div>'+
+      '<div class="signRow"><div class="signBox"><div class="signLine"></div>Landlord</div><div class="signBox"><div class="signLine"></div>Tenant — '+esc(t.name)+'</div></div>'+
+    '</div><button class="btn-ghost full" onclick="closeModal()">Close</button>');
+}
+
+// payment
+function openPayment(tenantId){
+  var t=tenantById(tenantId); var room=roomById(t.roomId);
+  var now=new Date();
+  var monthOpts=MONTHS.map(function(m,i){return '<option value="'+i+'"'+(i===now.getMonth()?' selected':'')+'>'+m+'</option>';}).join("");
+  modal('<h3 class="modalTitle">Record rent payment</h3>'+
+    '<p class="modalSub">'+esc(t.name)+' · '+esc(room?room.propName+" "+room.label:"")+'</p>'+
+    '<div class="formGrid">'+
+      fld("Amount (RM)",'<input class="inp" id="pm_amt" type="number" value="'+t.rent+'" autofocus>')+
+      fld("Paid on",'<input class="inp" id="pm_date" type="date" value="'+todayISO()+'">')+
+      fld("For month",'<select class="inp" id="pm_month">'+monthOpts+'</select>')+
+      fld("For year",'<input class="inp" id="pm_year" type="number" value="'+now.getFullYear()+'">')+
+      fld("Method",'<select class="inp" id="pm_method"><option>Cash</option><option>Bank transfer</option><option>e-Wallet</option><option>Cheque</option></select>')+
+    '</div>'+
+    '<button class="btn-primary full" onclick="doPayment(\''+tenantId+'\')">Save & issue receipt</button>');
+}
+async function doPayment(tenantId){
+  var t=tenantById(tenantId);
+  var p={id:uid(),receiptNo:"RC-"+uid().toUpperCase().slice(0,6),tenantId:t.id,tenantName:t.name,roomId:t.roomId,
+    amount:Number(el("pm_amt").value),date:el("pm_date").value,
+    forMonth:Number(el("pm_month").value),forYear:Number(el("pm_year").value),method:el("pm_method").value};
+  DB.Payments.unshift(p);
+  closeModal();
+  await insertRow("Payments",p);
+  saveReceiptPDF(p.id, buildReceiptHTML(p));
+  openReceipt(p.id);
+}
+async function delPayment(id){
+  if(!confirm("Delete this payment?")) return;
+  DB.Payments=DB.Payments.filter(function(p){return p.id!==id;}); render();
+  await deleteRow("Payments",id);
+}
+
+function buildReceiptHTML(p){
+  var t = tenantById(p.tenantId);
+  var room = roomById(p.roomId);
+  return `<!DOCTYPE html><html><body style="font-family:sans-serif;margin:0;padding:20px;">
+    <h1 style="font-size:24px;">RENT RECEIPT</h1>
+    <p><strong>No:</strong> ${p.receiptNo}</p>
+    <p><strong>Amount:</strong> ${RM(p.amount)}</p>
+    <p><strong>From:</strong> ${esc(t?t.name:p.tenantName)}</p>
+    <p><strong>For:</strong> ${MONTHS[p.forMonth]} ${p.forYear}</p>
+    <p><strong>Room:</strong> ${room? esc(room.propName)+" · "+esc(room.label) : "—"}</p>
+    <p><strong>Date:</strong> ${p.date} | <strong>Method:</strong> ${p.method}</p>
+    <hr><small>Thank you.</small>
+  </body></html>`;
+}
+
+// receipt
+function openReceipt(paymentId){
+  var p=DB.Payments.find(function(x){return x.id===paymentId;}); var t=tenantById(p.tenantId); var room=roomById(p.roomId);
+  modal('<div class="docHead"><h3 class="modalTitle">Payment receipt</h3><button class="btn-ghost" onclick="window.print()">⬇ Print / Save PDF</button></div>'+
+    '<div id="printable" class="receipt">'+
+      '<div class="rcTop"><div><div class="rcBrand">RENT RECEIPT</div><div class="docNo">'+esc(p.receiptNo)+'</div></div><div class="rcPaid">PAID</div></div>'+
+      '<div class="rcAmount">'+RM(p.amount)+'</div>'+
+      '<div class="rcGrid">'+term("Received from",esc(t?t.name:p.tenantName))+term("For","Rent — "+MONTHS[p.forMonth]+" "+p.forYear)+
+        term("Room",room?esc(room.propName)+" · "+esc(room.label):"—")+term("Payment date",esc(p.date))+term("Method",esc(p.method))+'</div>'+
+      '<div class="rcFoot">Thank you. This receipt confirms the payment above was received in full.</div>'+
+    '</div><button class="btn-ghost full" onclick="closeModal()">Close</button>');
+}
+
+// move out
+async function moveOut(tenantId){
+  var t=tenantById(tenantId);
+  if(!confirm("Move out "+t.name+"? This frees the room.")) return;
+  var room=DB.Rooms.find(function(r){return r.tenantId===tenantId;});
+  if(room){ room.tenantId=""; }
+  t.active=false; t.movedOut=todayISO();
+  render();
+  if(room) await updateRow("Rooms",room);
+  await updateRow("Tenants",t);
+}
+
+// expense
+async function addExpense(){
+  var amt=Number(el("ex_amt").value), desc=el("ex_desc").value.trim();
+  if(!amt||!desc) return;
+  var e={id:uid(),date:el("ex_date").value,category:el("ex_cat").value,propId:el("ex_prop").value,desc:desc,amount:amt};
+  DB.Expenses.unshift(e); render();
+  await insertRow("Expenses",e);
+}
+async function delExpense(id){
+  DB.Expenses=DB.Expenses.filter(function(e){return e.id!==id;}); render();
+  await deleteRow("Expenses",id);
+}
+
+// start
+boot();
 </script>
 </body>
 </html>
